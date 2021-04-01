@@ -1,4 +1,5 @@
-from .forms import AuthUserForm, RegisterUserForm
+from .models import Projects
+from .forms import AuthUserForm, RegisterUserForm, ProjectsForm
 
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
@@ -37,3 +38,21 @@ class SpeechRegisterView(CreateView):
 		
 class SpeechLogout(LogoutView):
 	next_page = reverse_lazy('main')
+
+class SpeechProjectsView(ListView):
+	model = Projects
+	template_name = 'projects.html'
+	def get_context_data(self, **kwargs):
+		kwargs['data'] = Projects.objects.filter(author = self.request.user).order_by('-date')
+		return super().get_context_data(**kwargs)
+
+class SpeechProjectsCreate(CreateView): # новый
+	model = Projects
+	form_class = ProjectsForm
+	template_name = 'projects_add.html'
+	success_url = reverse_lazy('projects')
+	def form_valid(self, form):
+		self.object = form.save(commit=False)
+		self.object.author = self.request.user
+		self.object.save()
+		return super().form_valid(form)
