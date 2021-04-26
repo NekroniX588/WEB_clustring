@@ -1,0 +1,12 @@
+{% extends 'main.html' %}
+
+  {% block content %}
+  	<div class="container mt-4 col-4 justify-content-end">
+      <h1 class="mt-4">Регистрация</h1>
+  		<form id="add_form" method="post">
+        {% csrf_token %}
+        {{form}}
+      </form>
+      <button form="add_form" type="submit" class="btn btn-primary mt-4">Зарегистрироваться</button>
+  	</div>
+  {% endblock %}

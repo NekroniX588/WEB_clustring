@@ -1,13 +1,22 @@
+import os 
+
 from .models import Projects
 from .forms import AuthUserForm, RegisterUserForm, ProjectsForm
 
-from django.shortcuts import render
+from core.reader import Reader
+from core.const import Const
+ 
+
+from django.shortcuts import render, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
 # Create your views here.
+
+
+reader = Reader()
 
 def main(request):
 	context = {
@@ -46,6 +55,8 @@ class SpeechProjectsView(ListView):
 		kwargs['data'] = Projects.objects.filter(author = self.request.user).order_by('-date')
 		return super().get_context_data(**kwargs)
 
+
+
 class SpeechProjectsCreate(CreateView): # новый
 	model = Projects
 	form_class = ProjectsForm
@@ -55,4 +66,29 @@ class SpeechProjectsCreate(CreateView): # новый
 		self.object = form.save(commit=False)
 		self.object.author = self.request.user
 		self.object.save()
+		if reader.read('./df'+self.object.attach.url) is not None:
+			self.object.status = True
+		else:
+			self.object.status = False
+
 		return super().form_valid(form)
+
+def project_start(request,pk):
+	data = Projects.objects.get(pk=pk)
+	data.stage = 1
+	df = reader.read('./df'+data.attach.url)
+
+	const = Const('./settings.yaml')
+
+	context = {
+		'data': data,
+		'settings': const.config
+	}
+	template = 'project_start.html'
+	return render(request, template, context)
+
+def delete_project(request, pk):
+	data = Projects.objects.get(pk=pk)
+	data.delete()
+	return redirect(reverse('projects'))
+

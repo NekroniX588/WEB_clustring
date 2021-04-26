@@ -1,0 +1,29 @@
+{% extends 'main.html' %}
+
+  {% block content %}
+    
+  	<div class="container">
+
+      {% url 'add_projects' as url_add_projects %}
+      <a class="nav-link" href="{{url_add_projects}}">Создать проект</a>
+      <table class="table">
+        <thead class="thead-dark">
+          <tr>
+            <th scope="col">Название</th>
+            <th scope="col">Дата</th>
+            <th scope="col">Статус</th>
+            <th scope="col">Удалить</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for i in data %}
+            <tr> 
+              <th scope="row"><a href="{% url 'start_project' i.id %}">{{i.name}}</a></td>
+              <td>{{i.date|date:'d.m.y'}}</td>
+              <td>{{i.status}}</td>
+              <th scope="row"><a href="{% url 'delete_project' i.id %}">Удалить</a></td>
+            </tr> 
+          {% endfor %}
+      </table>
+  	</div>
+  {% endblock %}
