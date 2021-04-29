@@ -2,10 +2,19 @@
 
   {% block content %}
     
+    <div class="container">
+
+      {{settings.conturs}}
+
+  	</div>
+
+
   	<div class="container">
 
       <h1>{{data.attach.url}}</h1>
-      {{settings}}
+      <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
+
       <a href="">Статистика</a>
+
   	</div>
   {% endblock %}

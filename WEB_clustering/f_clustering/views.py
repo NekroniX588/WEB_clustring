@@ -7,7 +7,7 @@ from core.reader import Reader
 from core.const import Const
  
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, HttpResponse
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth import authenticate, login
@@ -73,10 +73,15 @@ class SpeechProjectsCreate(CreateView): # новый
 
 		return super().form_valid(form)
 
+def table(reques, pk):
+	data = Projects.objects.get(pk=pk)
+	df = reader.read('./df'+data.attach.url)
+	geeks_object = df.to_html()
+	return HttpResponse(geeks_object)
+
 def project_start(request,pk):
 	data = Projects.objects.get(pk=pk)
 	data.stage = 1
-	df = reader.read('./df'+data.attach.url)
 
 	const = Const('./settings.yaml')
 

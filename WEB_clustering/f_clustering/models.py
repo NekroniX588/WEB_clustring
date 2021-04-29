@@ -10,3 +10,36 @@ class Projects(models.Model):
 	stage = models.IntegerField(default=0)
 	status = models.BooleanField(verbose_name='Готово', default=False)
 	attach = models.FileField(storage=FileSystemStorage(location='df'))
+
+
+
+# class Consts(models.Model):
+# 	percent_for_norms = models.FloatField()
+# 	percent_of_zeros = models.FloatField()
+# 	round_const = models.FloatField()
+# 	const = models.FloatField()
+# 	percent_X = models.FloatField()
+# 	down_steps = models.FloatField()
+# 	up_steps = models.FloatField()
+# 	max_depth = models.FloatField()
+# 	power_koef = models.FloatField()
+# 	percent_Y = models.FloatField()
+# 	threshold = models.FloatField()
+# 	Y_step = models.FloatField()
+
+# class Conturs(models.Model):
+# 	min_points = models.FloatField()
+# 	contour_points = models.FloatField()
+# 	min_diff = models.FloatField()
+# 	min_diff_1 = models.FloatField()
+# 	min_diff_2 = models.FloatField()
+# 	num_of_lenghts = models.FloatField()
+
+# class IsolatedCluster(models.Model):
+# 	constU1 = models.FloatField()
+# 	min_len = models.FloatField()
+# 	min_dif_1  = models.FloatField()
+# 	min_dif_2  = models.FloatField()
+# 	divider = models.FloatField()
+# 	max_div_num = models.FloatField()
+# 	merge_threshold = models.FloatField()
