@@ -10,10 +10,13 @@ class Projects(models.Model):
 	stage = models.IntegerField(default=0)
 	status = models.BooleanField(verbose_name='Готово', default=False)
 	attach = models.FileField(storage=FileSystemStorage(location='df'))
+	settings = models.FileField(storage=FileSystemStorage(location='settings'))
+	comments = models.TextField()
 
 
 
 # class Consts(models.Model):
+# 	project = models.ForeignKey(Projects, on_delete = models.CASCADE, verbose_name='Проект', blank=True, null=True)
 # 	percent_for_norms = models.FloatField()
 # 	percent_of_zeros = models.FloatField()
 # 	round_const = models.FloatField()
@@ -28,6 +31,7 @@ class Projects(models.Model):
 # 	Y_step = models.FloatField()
 
 # class Conturs(models.Model):
+# 	project = models.ForeignKey(Projects, on_delete = models.CASCADE, verbose_name='Проект', blank=True, null=True)
 # 	min_points = models.FloatField()
 # 	contour_points = models.FloatField()
 # 	min_diff = models.FloatField()
@@ -36,6 +40,7 @@ class Projects(models.Model):
 # 	num_of_lenghts = models.FloatField()
 
 # class IsolatedCluster(models.Model):
+# 	project = models.ForeignKey(Projects, on_delete = models.CASCADE, verbose_name='Проект', blank=True, null=True)
 # 	constU1 = models.FloatField()
 # 	min_len = models.FloatField()
 # 	min_dif_1  = models.FloatField()

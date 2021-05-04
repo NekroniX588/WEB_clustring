@@ -13,6 +13,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
+from django.core.files import File
 # Create your views here.
 
 
@@ -65,6 +66,10 @@ class SpeechProjectsCreate(CreateView): # новый
 	def form_valid(self, form):
 		self.object = form.save(commit=False)
 		self.object.author = self.request.user
+
+		f = open('./settings.yaml', 'r')
+		self.object.settings = File(f, name=os.path.basename(f.name))
+
 		self.object.save()
 		if reader.read('./df'+self.object.attach.url) is not None:
 			self.object.status = True
@@ -73,23 +78,41 @@ class SpeechProjectsCreate(CreateView): # новый
 
 		return super().form_valid(form)
 
-def table(reques, pk):
+def table(request, pk):
 	data = Projects.objects.get(pk=pk)
 	df = reader.read('./df'+data.attach.url)
 	geeks_object = df.to_html()
 	return HttpResponse(geeks_object)
 
+def statistic(request, pk):
+	data = Projects.objects.get(pk=pk)
+	df = reader.read('./df'+data.attach.url)
+	data.comments += reader.statistic(df)
+	data.save()
+	return redirect(reverse('start_project', args=(pk,)))
+
+
 def project_start(request,pk):
 	data = Projects.objects.get(pk=pk)
 	data.stage = 1
 
-	const = Const('./settings.yaml')
+	context = {
+		'data': data,
+	}
+	template = 'project_start.html'
+	return render(request, template, context)
+
+def const_start(request,pk):
+	data = Projects.objects.get(pk=pk)
+	data.stage = 2
+
+	const = Const('./settings/'+data.settings.url)
 
 	context = {
 		'data': data,
-		'settings': const.config
+		'settings': const.config,
 	}
-	template = 'project_start.html'
+	template = 'const_start.html'
 	return render(request, template, context)
 
 def delete_project(request, pk):

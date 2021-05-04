@@ -11,7 +11,12 @@ urlpatterns = [
     path('logout', views.SpeechLogout.as_view(), name='logout'),
     path('projects', views.SpeechProjectsView.as_view(), name='projects'),
     path('add_projects', views.SpeechProjectsCreate.as_view(), name='add_projects'),
-    path('start_page/<int:pk>', views.project_start, name='start_project'),
     path('delete_project/<int:pk>', views.delete_project, name='delete_project'),
-    path('show_data/<int:pk>', views.table, name='table')
+
+    path('start_page/<int:pk>', views.project_start, name='start_project'),
+    path('statistic/<int:pk>', views.statistic, name='statistic'),
+    path('show_data/<int:pk>', views.table, name='table'),
+
+    path('const_page/<int:pk>', views.const_start, name='const_start'),
+    
 ]

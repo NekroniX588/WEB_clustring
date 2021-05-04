@@ -12,7 +12,7 @@ class Const(object):
 		self.nameignore = ['cluster_id', 'subcluster_id']
 		if path is None:
 			self.status = False
-			self.zz = yaml.load(open("settings.yaml", 'r'))
+			self.zz = yaml.load(open("./settings.yaml", 'r'))
 		else:
 			self.status = True
 			self.config = yaml.load(open(path, 'r'))

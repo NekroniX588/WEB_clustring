@@ -5,10 +5,10 @@
   	<ul class="nav nav-pills justify-content-center">
       <li class="nav-item">
         {% url 'start_project' data.id as start_project %}
-        <p class="nav-link {% if start_project == request.path %} active {% endif %}" href="{% url 'start_project' data.id %}">Начальная страница</p>
+        <a class="nav-link {% if start_project == request.path %} active {% endif %}" href="{% url 'start_project' data.id %}">Начальная страница</a>
       </li>
       <li class="nav-item">
-      	{% url 'const_start' data.id as const_start %}
+        {% url 'const_start' data.id as const_start %}
         <p class="nav-link {% if const_start == request.path %} active {% endif %}" href="{% url 'const_start' data.id %}">Подбор констант</p>
       </li>
       <li class="nav-item">
@@ -21,12 +21,21 @@
 
   	<div class="container">
 
+      {{settings}}
+
+
+      {% for i in settings.conturs %}
+        {{i}}
+      {% endfor %}
+      <form  method="post">
+        {% csrf_token %}
+        <input placeholder="min_points" type="number" step="any" value={{settings.conturs.min_points}}>
+      </form>
+
       <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
 
-      <a href="{% url 'statistic' data.id %}">Статистика</a>
-
       <textarea name="text" cols="40" rows="15">{{data.comments}}</textarea>
-      <a href="{% url 'const_start' data.id %}">Далее</a>
+      <a href="">Далее</a>
 
   	</div>
   {% endblock %}

@@ -9,12 +9,13 @@ class Reader(object):
 		self.nameignore = ['id', 'F', 'cluster_id', 'subcluster_id']
 
 	def statistic(self, df,  num_of_intervals=10):#Add distances
-		print('Stated size of data', df.shape[0])
+		text = ''
+		text += 'Stated size of data ' + str(df.shape[0]) + '\n'
 		start = df.shape[0]
 		df = df.dropna()
 		finish = df.shape[0]
-		print('Data contained ', start-finish, 'incorrect rows')
-		print('Size of data', finish)
+		text += 'Data contained ' + str(start-finish) + 'incorrect rows\n' 
+		text += 'Size of data ' + str(finish) + '\n'
 
 		need_names = [n for n in df.columns if n not in self.nameignore] 
 		df_correct = df[need_names]
@@ -22,18 +23,18 @@ class Reader(object):
 		for col in df_correct.columns:
 			x = df_correct[col].values
 			d = pairwise_distances(x[:, np.newaxis]).ravel()
-			print(col, 'contain', d[d==0].shape[0] , 'zero distances', round(d[d==0].shape[0]/d.shape[0],5))
+			text += str(col) + ' contain ' + str(d[d==0].shape[0]) + ' zero distances ' + str(round(d[d==0].shape[0]/d.shape[0],5)) + '\n'
 			d.sort()
 			start = 0
 			finish = len(d)//num_of_intervals
 			step = len(d)//num_of_intervals
 			for i in range(num_of_intervals-1):
-				print('Interval:',d[start:finish].mean())
+				text += 'Interval:' + str(d[start:finish].mean()) + '\n'
 				start = finish
 				finish += step
-			print('Interval:',d[start:].mean())
+			text += 'Interval:' + str(d[start:].mean()) + '\n'
 
-		return df
+		return text, df
 
 	def split_data(self, df, train_size = 10, shuffle=True):
 		df_train, df_test = train_test_split(df, train_size=train_size/100, shuffle=shuffle)
