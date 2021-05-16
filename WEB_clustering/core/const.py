@@ -10,12 +10,13 @@ from sklearn.metrics import pairwise_distances
 class Const(object):
 	def __init__(self, path=None):
 		self.nameignore = ['cluster_id', 'subcluster_id']
+		self.status = False
 		if path is None:
-			self.status = False
 			self.zz = yaml.load(open("./settings.yaml", 'r'))
 		else:
-			self.status = True
 			self.config = yaml.load(open(path, 'r'))
+			if 'a' in self.config['consts']:
+				self.status = True
 		self.__norms = {}
 		self.nameignore = ['F', 'cluster_id', 'subcluster_id']
 
@@ -49,12 +50,13 @@ class Const(object):
 		df -- data frame ['id', 'X1', 'X2', ..., 'Xn']
 
 		'''
+		self.config['norms'] = {}
 		need_names = [n for n in df.columns if n not in self.nameignore + ['id']] 
 		df_for_norm = df[need_names]
 		X, norms = self.__normalize(df_for_norm.values, self.config['consts']['percent_for_norms'])
 		
 		for i, col in enumerate(df_for_norm.columns[:]):
-			self.__norms[col] = norms[i]
+			self.config['norms'][col] = float(np.round(norms[i], self.config['consts']['round_const']))
 		df[need_names] = X
 
 	def get_norms(self):
@@ -64,16 +66,10 @@ class Const(object):
 		else:
 			return self.__norms
 
-	def save_consts(self, name=None):
-		assert type(name) == str, 'Name should be str'
-		if name is None:
-			with open('settings_new.yaml', 'w') as file:
-				print('Writing settings in file settings_new.yaml')
-				documents = yaml.dump(self.config, file)
-		else:
-			with open(name+'.yaml', 'w') as file:
-				print('Writing settings in file ' + name + ' .yaml')
-				documents = yaml.dump(self.config, file)
+	def save_consts(self, path):
+		assert type(path) == str, 'Name should be str'
+		with open(path, 'w') as file:
+			documents = yaml.dump(self.config, file)
 
 	def add_Fcolumn(self, df):
 		'''

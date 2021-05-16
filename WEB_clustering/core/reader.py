@@ -14,7 +14,7 @@ class Reader(object):
 		start = df.shape[0]
 		df = df.dropna()
 		finish = df.shape[0]
-		text += 'Data contained ' + str(start-finish) + 'incorrect rows\n' 
+		text += 'Data contained ' + str(start-finish) + ' incorrect rows\n' 
 		text += 'Size of data ' + str(finish) + '\n'
 
 		need_names = [n for n in df.columns if n not in self.nameignore] 
@@ -23,7 +23,8 @@ class Reader(object):
 		for col in df_correct.columns:
 			x = df_correct[col].values
 			d = pairwise_distances(x[:, np.newaxis]).ravel()
-			text += str(col) + ' contain ' + str(d[d==0].shape[0]) + ' zero distances ' + str(round(d[d==0].shape[0]/d.shape[0],5)) + '\n'
+			text += str(col) + ' contain absolute:' + str(d[d==0].shape[0]) + '\n'
+			text += str(col) + ' contain relation:' + str(round(d[d==0].shape[0]/d.shape[0],5))+ '\n'
 			d.sort()
 			start = 0
 			finish = len(d)//num_of_intervals

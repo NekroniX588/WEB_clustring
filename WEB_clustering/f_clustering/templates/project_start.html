@@ -12,7 +12,7 @@
         <p class="nav-link {% if const_start == request.path %} active {% endif %}" href="{% url 'const_start' data.id %}">Подбор констант</p>
       </li>
       <li class="nav-item">
-        <p class="nav-link {% if start_project == request.path %} active {% endif %}" href="{% url 'start_project' data.id %}">Кластеризация</p>
+        <p class="nav-link {% if clustering_start == request.path %} active {% endif %}" href="{% url 'clustering_start' data.id %}">Кластеризация</p>
       </li>
       <li class="nav-item">
         <p class="nav-link {% if start_project == request.path %} active {% endif %}" href="{% url 'start_project' data.id %}">Классификация</p>
@@ -26,7 +26,11 @@
       <a href="{% url 'statistic' data.id %}">Статистика</a>
 
       <textarea name="text" cols="40" rows="15">{{data.comments}}</textarea>
-      <a href="{% url 'const_start' data.id %}">Далее</a>
+      {% if data.stage == 1 or data.stage == 2 %}
+        <a href="{% url 'const_start' data.id %}">Далее</a>
+      {% elif data.stage == 3 %}
+        <a href="{% url 'clustering_start' data.id %}">Далее</a>
+      {% endif %}
 
   	</div>
   {% endblock %}

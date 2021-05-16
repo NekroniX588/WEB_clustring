@@ -18,5 +18,8 @@ urlpatterns = [
     path('show_data/<int:pk>', views.table, name='table'),
 
     path('const_page/<int:pk>', views.const_start, name='const_start'),
+    path('const_reload/<int:pk>', views.const_reload, name='const_reload'),
+    path('calculate_a/<int:pk>/<int:type_optimization>', views.calculate_a, name='calculate_a'),
     
+    path('clustering_page/<int:pk>', views.clustering_start, name='clustering_start'),
 ]

@@ -1,0 +1,85 @@
+{% extends 'main.html' %}
+
+  {% block content %}
+    
+    {% load f_extras %}
+
+  	<ul class="nav nav-pills justify-content-center">
+      <li class="nav-item">
+        {% url 'start_project' data.id as start_project %}
+        <a class="nav-link {% if start_project == request.path %} active {% endif %}" href="{% url 'start_project' data.id %}">Начальная страница</a>
+      </li>
+      <li class="nav-item">
+        {% url 'const_start' data.id as const_start %}
+        <p class="nav-link {% if const_start == request.path %} active {% endif %}" href="{% url 'const_start' data.id %}">Подбор констант</p>
+      </li>
+      <li class="nav-item">
+        {% url 'clustering_start' data.id as const_start %}
+        <p class="nav-link {% if clustering_start == request.path %} active {% endif %}" href="{% url 'clustering_start' data.id %}">Кластеризация</p>
+      </li>
+      <li class="nav-item">
+        <p class="nav-link {% if start_project == request.path %} active {% endif %}" href="{% url 'start_project' data.id %}">Классификация</p>
+      </li>
+
+
+  	<div class="container">
+
+      <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
+
+      <form action="{% url 'clustering_start' data.id %}" method="post" id="save">
+        {% csrf_token %}
+        <h3>Consts</h3>
+          <p>Y_step {{settings.consts.Y_step}} </p>
+          <p>const {{settings.consts.const}}</p>
+          <p>down_steps {{settings.consts.down_steps}}</p>
+          <p>max_depth {{settings.consts.max_depth}}</p>
+          <p>percent_X {{settings.consts.percent_X}}</p>
+          <p>percent_Y {{settings.consts.percent_Y}}</p>
+          <p>percent_for_norms {{settings.consts.percent_for_norms}}</p>
+          <p>percent_of_zeros {{settings.consts.percent_of_zeros}}</p>
+          <p>round_const {{settings.consts.round_const}}</p>
+          <p>threshold {{settings.consts.threshold}}</p>
+          <p>up_steps {{settings.consts.up_steps}}</p>
+          {% if settings.consts.a %}
+            <p style="color:red">a {{settings.consts.a}}</p>
+          {% endif %}
+        <h3>conturs</h3>
+          <p>min_points
+          <input name="min_points" type="number" step="any" value={{settings.conturs.min_points}}></p>
+          <p>contour_points
+          <input name="contour_points" type="number" step="any" value={{settings.conturs.contour_points}}></p>
+          <p>num_of_lenghts
+          <input name="num_of_lenghts" type="number" step="any" value={{settings.conturs.num_of_lenghts}}></p>
+          
+          <p>min_diff
+          <input name="min_diff" type="number" step="any" value={{settings.conturs.min_diff}}></p>
+
+        <h3>isolated_cluster</h3>
+          <p>constU1
+          <input name="constU1" type="number" step="any" value={{settings.isolated_cluster.constU1}}></p>
+          <p>min_len
+          <input name="min_len" type="number" step="any" value={{settings.isolated_cluster.min_len}}></p>
+          <p>divider
+          <input name="divider" type="number" step="any" value={{settings.isolated_cluster.divider}}></p>
+          <p>merge_threshold
+          <input name="merge_threshold" type="number" step="any" value={{settings.isolated_cluster.merge_threshold}}></p>
+          <p>max_div_num
+          <input name="max_div_num" type="number" step="any" value={{settings.isolated_cluster.max_div_num}}></p>
+          <p>min_dif
+          <input name="min_dif" type="number" step="any" value={{settings.isolated_cluster.min_dif}}></p>
+
+        {% if settings.norms %}
+          <h3>norms</h3>
+            {% for norm in settings.norms %}
+              <p>{{norm}} {{ settings.norms|get_item:norm }}</p>
+            {% endfor %}
+        {% endif %}
+      </form>
+
+      <button form="save" type="submit" class="btn btn-primary mt-4">Сохранить</button>
+
+      <textarea name="text" cols="40" rows="15">{{data.comments}}</textarea>
+      <a href="">Далее</a>
+
+  	</div>
+  {% endblock %}

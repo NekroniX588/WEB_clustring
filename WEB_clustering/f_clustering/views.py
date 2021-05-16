@@ -70,8 +70,10 @@ class SpeechProjectsCreate(CreateView): # новый
 		f = open('./settings.yaml', 'r')
 		self.object.settings = File(f, name=os.path.basename(f.name))
 
+		self.object.stage = 1
+
 		self.object.save()
-		if reader.read('./df'+self.object.attach.url) is not None:
+		if reader.read('./df/'+self.object.attach.url) is not None:
 			self.object.status = True
 		else:
 			self.object.status = False
@@ -86,15 +88,17 @@ def table(request, pk):
 
 def statistic(request, pk):
 	data = Projects.objects.get(pk=pk)
-	df = reader.read('./df'+data.attach.url)
-	data.comments += reader.statistic(df)
+	df = reader.read('./df/'+data.attach.url)
+	text, df = reader.statistic(df)
+	data.comments += text
 	data.save()
+	reader.write(df, './df/'+data.attach.url)
 	return redirect(reverse('start_project', args=(pk,)))
-
 
 def project_start(request,pk):
 	data = Projects.objects.get(pk=pk)
-	data.stage = 1
+
+	df = reader.read('./df/'+data.attach.url)
 
 	context = {
 		'data': data,
@@ -103,18 +107,106 @@ def project_start(request,pk):
 	return render(request, template, context)
 
 def const_start(request,pk):
+	if request.method =='GET':
+		data = Projects.objects.get(pk=pk)
+		data.stage = 2
+		data.save()
+		const = Const('./settings/'+data.settings.url)
+
+		context = {
+			'data': data,
+			'settings': const.config,
+		}
+		template = 'const_start.html'
+
+		return render(request, template, context)
+	elif request.method =='POST':
+		data = Projects.objects.get(pk=pk)
+		const = Const('./settings/'+data.settings.url)
+
+		for domen in const.config:
+			for key in request.POST.keys():
+				if key == 'min_dif_0':
+					const.config['isolated_cluster']['min_dif'][0] = float(request.POST[key])
+				elif key == 'min_dif_1':
+					const.config['isolated_cluster']['min_dif'][1] = float(request.POST[key])
+				elif key == 'min_diff_0':
+					const.config['conturs']['min_diff'][0] = float(request.POST[key])
+				elif key == 'min_diff_1':
+					const.config['conturs']['min_diff'][1] = float(request.POST[key])
+				if key in const.config[domen]:
+					if key in ['min_points', 'contour_points', 'num_of_lenghts', 'divider', 'max_div_num', 'round_const',\
+					'down_steps', 'up_steps', 'max_depth']:
+						const.config[domen][key] = int(round(float(request.POST[key]),0))
+					else:
+						const.config[domen][key] = float(request.POST[key])
+
+		const.save_consts('./settings/'+data.settings.url)
+		return redirect(reverse('const_start', args=(pk, )))
+
+def calculate_a(request, pk, type_optimization):
 	data = Projects.objects.get(pk=pk)
-	data.stage = 2
+	df = reader.read('./df/'+data.attach.url)
 
 	const = Const('./settings/'+data.settings.url)
+	const.norm(df)
+	const.calculate_a(df, type_optimization)
+	const.save_consts('./settings/'+data.settings.url)
 
-	context = {
-		'data': data,
-		'settings': const.config,
-	}
-	template = 'const_start.html'
-	return render(request, template, context)
+	return redirect(reverse('const_start', args=(pk, )))
 
+def const_reload(request, pk):
+	data = Projects.objects.get(pk=pk)
+	const = Const('./settings/'+data.settings.url)
+	f = open('./settings.yaml', 'r')
+	data.settings = File(f, name=os.path.basename(f.name))
+	data.save()
+	return redirect(reverse('const_start', args=(pk, )))
+
+def clustering_start(request,pk):
+	if request.method =='GET':
+		data = Projects.objects.get(pk=pk)
+		data.stage = 3
+		data.save()
+
+		const = Const('./settings/'+data.settings.url)
+
+		context = {
+			'data': data,
+			'settings': const.config,
+		}
+		template = 'clustering_start.html'
+
+		return render(request, template, context)
+	elif request.method =='POST':
+		data = Projects.objects.get(pk=pk)
+		const = Const('./settings/'+data.settings.url)
+
+		for domen in const.config:
+			for key in request.POST.keys():
+				if key == 'min_dif_0':
+					const.config['isolated_cluster']['min_dif'][0] = float(request.POST[key])
+				elif key == 'min_dif_1':
+					const.config['isolated_cluster']['min_dif'][1] = float(request.POST[key])
+				elif key == 'min_diff_0':
+					const.config['conturs']['min_diff'][0] = float(request.POST[key])
+				elif key == 'min_diff_1':
+					const.config['conturs']['min_diff'][1] = float(request.POST[key])
+				if key in const.config[domen]:
+					if key in ['min_points', 'contour_points', 'num_of_lenghts', 'divider', 'max_div_num', 'round_const',\
+					'down_steps', 'up_steps', 'max_depth']:
+						const.config[domen][key] = int(round(float(request.POST[key]),0))
+					else:
+						const.config[domen][key] = float(request.POST[key])
+
+		const.save_consts('./settings/'+data.settings.url)
+		return redirect(reverse('clustering_start', args=(pk, )))
+
+def compute_clustering(request,pk):
+	data = Projects.objects.get(pk=pk)
+	df = reader.read('./df/'+data.attach.url)
+
+	
 def delete_project(request, pk):
 	data = Projects.objects.get(pk=pk)
 	data.delete()
