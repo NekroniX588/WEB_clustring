@@ -5,7 +5,10 @@ from .forms import AuthUserForm, RegisterUserForm, ProjectsForm
 
 from core.reader import Reader
 from core.const import Const
- 
+from core.fastclustering import Fast_Clusters
+from core.clustering import Clusters
+from core.i_merge import IMerger
+from core.Subclusterring import Subclusters
 
 from django.shortcuts import render, redirect, HttpResponse
 from django.urls import reverse, reverse_lazy
@@ -169,11 +172,32 @@ def clustering_start(request,pk):
 		data.stage = 3
 		data.save()
 
+		status_del_cluster = None
+		status_del_subcluster = None
+		df = reader.read('./df/'+data.attach.url)
+		if 'cluster_id' in df.columns:
+			status_cluster = False
+			status_merge = True
+			status_del_cluster = True
+		else:
+			status_cluster = True
+			status_merge = False
+		if 'subcluster_id' in df.columns:
+			status_subcluster = False
+			status_del_subcluster = True
+		else:
+			status_subcluster = True
+
 		const = Const('./settings/'+data.settings.url)
 
 		context = {
 			'data': data,
 			'settings': const.config,
+			'status_cluster': status_cluster,
+			'status_merge': status_merge,
+			'status_subcluster': status_subcluster,
+			'status_del_cluster': status_del_cluster,
+			'status_del_subcluster': status_del_subcluster,
 		}
 		template = 'clustering_start.html'
 
@@ -202,10 +226,40 @@ def clustering_start(request,pk):
 		const.save_consts('./settings/'+data.settings.url)
 		return redirect(reverse('clustering_start', args=(pk, )))
 
-def compute_clustering(request,pk):
+def compute_clustering(request, pk, type_c):
 	data = Projects.objects.get(pk=pk)
 	df = reader.read('./df/'+data.attach.url)
+	const = Const('./settings/'+data.settings.url)
+	if type_c == 1:
+		cluster = Clusters(const.config) 
+		df = cluster.get_isolated_clusters(df)
+		data.comments += 'finded '+str(len(set(df['cluster_id'])))+' clusters\n'
+	elif type_c == 2:
+		fastcluster = Fast_Clusters(const.config) 
+		df = fastcluster.get_isolated_clusters(df)
+		data.comments += 'finded '+str(len(set(df['cluster_id'])))+' clusters\n'
+	elif type_c == 3:
+		Merger = IMerger(const.config)
+		Merger.mergeClusters(df)
+		data.comments += 'finded '+str(len(set(df['cluster_id'])))+' clusters\n'
+	elif type_c == 4:
+		sub = Subclusters(const.config)
+		df = sub.subclustering(df, type_of_closed=2)
+		data.comments += 'finded '+str(len(set(df['subcluster_id'])))+' subclusters\n'
+	data.save()
+	reader.write(df, './df/'+data.attach.url)
+	return redirect(reverse('clustering_start', args=(pk, )))
 
+def del_clustering(request, pk, type_c):
+	data = Projects.objects.get(pk=pk)
+	df = reader.read('./df/'+data.attach.url)
+	if type_c==1:
+		del df['cluster_id']
+	elif type_c==2:
+		del df['subcluster_id']
+
+	reader.write(df, './df/'+data.attach.url)
+	return redirect(reverse('clustering_start', args=(pk, )))
 	
 def delete_project(request, pk):
 	data = Projects.objects.get(pk=pk)

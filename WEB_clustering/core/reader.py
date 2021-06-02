@@ -22,9 +22,12 @@ class Reader(object):
 
 		for col in df_correct.columns:
 			x = df_correct[col].values
-			d = pairwise_distances(x[:, np.newaxis]).ravel()
-			text += str(col) + ' contain absolute:' + str(d[d==0].shape[0]) + '\n'
-			text += str(col) + ' contain relation:' + str(round(d[d==0].shape[0]/d.shape[0],5))+ '\n'
+			d = pairwise_distances(x[:, np.newaxis]).ravel()#Удалить главную диагональ
+			print((d.shape[0]-df.shape[0])//2)
+			d_abs = (d[d==0].shape[0]-df.shape[0])//2
+			d_rel = ((d[d==0].shape[0]-df.shape[0])//2)/((d.shape[0]-df.shape[0])//2)
+			text += str(col) + ' contain absolute:' + str(d_abs) + '\n'
+			text += str(col) + ' contain relation:' + str(round(d_rel,5))+ '\n'
 			d.sort()
 			start = 0
 			finish = len(d)//num_of_intervals
@@ -69,7 +72,8 @@ class Reader(object):
 		Checks if input dataframe's columns are in the right format
 		mode -- read or write 
 		'''
-		coords_nums = [int(col_name[1:]) for col_name in df.columns[1:]]
+		print(df.columns)
+		coords_nums = [int(col_name[1:]) for col_name in df.columns if col_name not in self.nameignore]
 		#Add information ('F', Cluster_Id, Subcluster)
 		is_asc = coords_nums == sorted(coords_nums)
 		if is_asc == False:
@@ -85,8 +89,10 @@ class Reader(object):
 		return True
 
 	def write(self, out_df, file_path):
+		print(file_path)
 		'''writes df to file, returns nothing or None'''
-		file_extension = file_path.split('.')[1]
+		file_extension = file_path.split('.')[-1]
+		print(file_extension)
 		if file_extension == 'csv':
 			out_df.to_csv(file_path, index=False) 
 		elif file_extension == 'xlsx' or file_extension == 'xls':

@@ -1,11 +1,8 @@
 from sklearn.metrics import pairwise_distances
 from scipy.spatial import distance
-from reader import Reader
-from const import Const
 import random
 import numpy as np
-from utils import get_F_example
-from clustering import Clusters
+from core.utils import get_F_example
 import pandas as pd
 
 class IMerger():

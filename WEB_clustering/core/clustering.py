@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from tqdm import tqdm
-from utils import get_F_example
+from core.utils import get_F_example
 
 import logging
 
@@ -56,6 +56,9 @@ class Clusters():
 		log_message = 'Расчет профиля для точек: {} и {}\n'.format(p1, p2)
 
 		log_message+= 'Расстояние между точками: {}'.format(np.linalg.norm(np.array(p1[1:-1]) - np.array(p2[1:-1])))
+
+		# if min(p1[-1],p2[-1])<self.cluster_config['min_dif']*self.cluster_config['min_dif']:
+		# 	return 'common'
 
 		# if np.linalg.norm(np.array(p1[1:-1]) - np.array(p2[1:-1]))/self.cluster_config['divider'] <= self.contur_config['min_diff']:
 		if np.linalg.norm(np.array(p1[1:-1]) - np.array(p2[1:-1])) <= self.cluster_config['min_len']:

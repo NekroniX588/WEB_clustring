@@ -75,8 +75,26 @@
             {% endfor %}
         {% endif %}
       </form>
+      <p><button form="save" type="submit" class="btn btn-primary mt-4">Сохранить</button></p>
 
-      <button form="save" type="submit" class="btn btn-primary mt-4">Сохранить</button>
+      {% if status_cluster %}
+        <p><a href="{% url 'compute_clustering' data.id 1 %}">Кластеризация</a></p>
+        <p><a href="{% url 'compute_clustering' data.id 2 %}">Бстрая кластеризация</a></p>
+      {% endif %}
+      {% if status_merge %}
+        <p><a href="{% url 'compute_clustering' data.id 3 %}">Merging</a></p>
+      {% endif %}
+      {% if status_subcluster %}
+        <p><a href="{% url 'compute_clustering' data.id 4 %}">Сабкластеризация</a></p>
+      {% endif %}
+
+      {% if status_del_cluster %}
+        <p><a href="{% url 'del_clustering' data.id 1 %}">Удалить результаты кластеризации</a></p>
+      {% endif %}
+
+      {% if status_del_subcluster %}
+        <p><a href="{% url 'del_clustering' data.id 2 %}">Удалить результаты сабкластеризации</a></p>
+      {% endif %}
 
       <textarea name="text" cols="40" rows="15">{{data.comments}}</textarea>
       <a href="">Далее</a>

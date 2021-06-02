@@ -22,4 +22,7 @@ urlpatterns = [
     path('calculate_a/<int:pk>/<int:type_optimization>', views.calculate_a, name='calculate_a'),
     
     path('clustering_page/<int:pk>', views.clustering_start, name='clustering_start'),
+    path('compute_clustering/<int:pk>/<int:type_c>', views.compute_clustering, name='compute_clustering'),
+    path('del_clustering/<int:pk>/<int:type_c>', views.del_clustering, name='del_clustering'),
+
 ]

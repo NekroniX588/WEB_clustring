@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from tqdm import tqdm
-from utils import get_F_example
+from core.utils import get_F_example
 
 import logging
 
