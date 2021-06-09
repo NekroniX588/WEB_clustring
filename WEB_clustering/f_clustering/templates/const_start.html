@@ -29,6 +29,17 @@
 
       <form action="{% url 'const_start' data.id %}" method="post" id="save">
         {% csrf_token %}
+
+        {% for col in columns %}
+          <p>
+            <input name="need_coords" class="form-check-input" type="checkbox" value="{{col.0}}" id="flexCheckDefault" {% if col.1 %} checked {% endif %}>
+            <label class="form-check-label" for="flexCheckDefault">
+              {{col.0}}
+            </label>
+          </p> 
+        {% endfor %}
+
+
         <h3>Consts</h3>
           <p>Y_step
           <input name="Y_step" type="number" step="any" value={{settings.consts.Y_step}}></p>

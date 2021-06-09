@@ -7,11 +7,13 @@ import logging
 
 class Fast_Clusters():
 	def __init__(self, config):
-		self.nameignore = ['F', 'cluster_id', 'subcluster_id']
 		self.config = config
 		self.contur_config = config['conturs']
 		self.cluster_config = config['isolated_cluster']
-
+		if 'ignore_coord' in self.config:
+			self.nameignore = ['F', 'cluster_id', 'subcluster_id'] + self.config['ignore_coord']
+		else:
+			self.nameignore = ['F', 'cluster_id', 'subcluster_id']
 
 	def get_profile(self, F, p1, p2):
 		#Функция рассчета профиля F - матрица формата ['id','x1',...,'xn','F'], p1, p2 - точки формата ['id','x1',...,'xn','F']
@@ -36,9 +38,13 @@ class Fast_Clusters():
 				for j in range(1, len(p1)-1):
 					x.append((p1[j] + p2[j]*(i+1)/(num_of_segments-i))/(1+(i+1)/(num_of_segments-i)))
 				points.append(np.array(x))
-
-			Fs = [[point[1],  point[2], get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)] \
+			# for point in points:
+			# 	print('==='*20)
+			# 	print(point)
+			# 	print('==='*20)
+			Fs = [[p for p in point[1:] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]] \
 																									for point in points]
+			# print(Fs[:5])
 			Fs = sorted(Fs, key = lambda S: S[-1], reverse = False)
 
 			Fmin = np.min([F[-1] for F in Fs])

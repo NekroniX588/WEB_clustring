@@ -18,7 +18,10 @@ class Const(object):
 			if 'a' in self.config['consts']:
 				self.status = True
 		self.__norms = {}
-		self.nameignore = ['F', 'cluster_id', 'subcluster_id']
+		if 'ignore_coord' in self.config:
+			self.nameignore = ['F', 'cluster_id', 'subcluster_id'] + self.config['ignore_coord']
+		else:
+			self.nameignore = ['F', 'cluster_id', 'subcluster_id']
 
 	def __normalize(self, X, percent):
 		#add dict of means
@@ -60,11 +63,51 @@ class Const(object):
 		df[need_names] = X
 
 	def get_norms(self):
-		if len(self.__norms)==0:
+		if len(self.config['norms'])==0:
 			print("Norms is not calculated. Maybe you don't normalize training data")
 			return 
 		else:
-			return self.__norms
+			return self.config['norms']
+
+	def statistic(self, df, num_of_intervals=10):
+		text = ''
+		if 'F' in df.columns:
+			text += 'F_max = %.4f, F_min = %.4f \n'%(max(df['F']),min(df['F']))
+			F = df['F'].values
+			F.sort()
+			start = 0
+			finish = len(F)//num_of_intervals
+			step = len(F)//num_of_intervals
+			for i in range(num_of_intervals-1):
+				text += 'Interval %.d:% 5f \n'%(i,F[start:finish].mean())
+				start = finish
+				finish += step
+			text += 'Interval %.d:% 5f \n'%(i+1,F[start:].mean())
+			text += '*'*20+'\n'
+			need_column = []
+			for col in df.columns:
+				if 'X' in col:
+					need_column.append(col)
+			x = df[need_column].values
+			d = pairwise_distances(x).ravel()
+			d_abs = (d[d==0].shape[0]-df.shape[0])//2
+			d_rel = ((d[d==0].shape[0]-df.shape[0])//2)/((d.shape[0]-df.shape[0])//2)
+			text += 'data contain absolute: %.d \n'%(d_abs)
+			text += 'data contain relation: %.5f \n'%(d_rel)
+			d.sort()
+			start = 0
+			finish = len(d)//num_of_intervals
+			step = len(d)//num_of_intervals
+			for i in range(num_of_intervals-1):
+				text += 'Interval: %.d:% 5f \n'%(i,d[start:finish].mean())
+				start = finish
+				finish += step
+			text += 'Interval: %.d:% 5f \n'%(i+1,d[start:].mean())
+			text += '='*20 + '\n'
+		else:
+			text += 'F not calculated\n'
+		return text
+
 
 	def save_consts(self, path):
 		assert type(path) == str, 'Name should be str'
@@ -391,8 +434,10 @@ class Const(object):
 		if self.status == True:
 			print('You are calculate consts yet. Please, reload Const object from default settings')
 			return None
-		X = df.iloc[:].values#приводим их np.array [id, X1, X2]
 
+		need_names = [n for n in df.columns if n not in self.nameignore] 
+		X = df[need_names].iloc[:].values#приводим их np.array [id, X1, X2]
+		print(X.shape)
 		if type_of_optimization==1:
 			max_a = self.__calculate_const(X, 1)
 		elif type_of_optimization==2:

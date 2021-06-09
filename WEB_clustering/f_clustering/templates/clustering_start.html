@@ -26,6 +26,8 @@
 
       <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
 
+      <p><a href="{% url 'f_statistic' data.id %}">Статистика по F</a></p>
+
       <form action="{% url 'clustering_start' data.id %}" method="post" id="save">
         {% csrf_token %}
         <h3>Consts</h3>
@@ -97,7 +99,7 @@
       {% endif %}
 
       <textarea name="text" cols="40" rows="15">{{data.comments}}</textarea>
-      <a href="">Далее</a>
+      <a href="{% url 'classification_start' data.id %}">Далее</a>
 
   	</div>
   {% endblock %}

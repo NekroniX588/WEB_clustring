@@ -8,7 +8,9 @@ from core.const import Const
 from core.fastclustering import Fast_Clusters
 from core.clustering import Clusters
 from core.i_merge import IMerger
-from core.Subclusterring import Subclusters
+from core.subclusterring import Subclusters
+from core.predictor import Classsifier
+
 
 from django.shortcuts import render, redirect, HttpResponse
 from django.urls import reverse, reverse_lazy
@@ -17,6 +19,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
 from django.core.files import File
+from django.http import HttpResponseRedirect
 # Create your views here.
 
 
@@ -89,6 +92,38 @@ def table(request, pk):
 	geeks_object = df.to_html()
 	return HttpResponse(geeks_object)
 
+def split_data(request, pk):
+	data = Projects.objects.get(pk=pk)
+	df = reader.read('./df'+data.attach.url)
+	df_train, df_test = reader.split_data(df)
+	name = data.name
+	data.delete()
+
+	data_train = Projects()
+	data_train.author = request.user
+	data_train.status = True
+	data_train.stage = 1
+	f = open('./settings.yaml', 'r')
+	data_train.settings = File(f, name=os.path.basename(f.name))
+	d = reader.write(df_train, './df/'+'.'.join(data.attach.url.split('.')[:-1])+'_train.'+data.attach.url.split('.')[-1])
+	ff = open('./df/'+'.'.join(data.attach.url.split('.')[:-1])+'_train.'+data.attach.url.split('.')[-1], 'rb')
+	data_train.attach = File(ff, name=os.path.basename(ff.name))
+	data_train.name = name+'_train'
+	data_train.save()
+
+	data_test = Projects()
+	data_test.author = request.user
+	data_test.status = True
+	data_test.stage = 1
+	f = open('./settings.yaml', 'r')
+	data_test.settings = File(f, name=os.path.basename(f.name))
+	d = reader.write(df_test, './df/'+'.'.join(data.attach.url.split('.')[:-1])+'_test.'+data.attach.url.split('.')[-1])
+	ff = open('./df/'+'.'.join(data.attach.url.split('.')[:-1])+'_test.'+data.attach.url.split('.')[-1], 'rb')
+	data_test.attach = File(ff, name=os.path.basename(ff.name))
+	data_test.name = name+'_test'
+	data_test.save()
+	return redirect(reverse('projects'))
+
 def statistic(request, pk):
 	data = Projects.objects.get(pk=pk)
 	df = reader.read('./df/'+data.attach.url)
@@ -97,6 +132,16 @@ def statistic(request, pk):
 	data.save()
 	reader.write(df, './df/'+data.attach.url)
 	return redirect(reverse('start_project', args=(pk,)))
+
+def f_statistic(request, pk):
+	data = Projects.objects.get(pk=pk)
+	df = reader.read('./df/'+data.attach.url)
+	const = Const('./settings/'+data.settings.url)
+	const.add_Fcolumn(df)
+	text = const.statistic(df)
+	data.comments += text
+	data.save()
+	return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def project_start(request,pk):
 	data = Projects.objects.get(pk=pk)
@@ -111,22 +156,35 @@ def project_start(request,pk):
 
 def const_start(request,pk):
 	if request.method =='GET':
+		
 		data = Projects.objects.get(pk=pk)
+		df = reader.read('./df/'+data.attach.url)
 		data.stage = 2
 		data.save()
 		const = Const('./settings/'+data.settings.url)
 
+		need_columns = []
+		for col in df.columns:
+			if 'X' in col:
+				if col in const.nameignore:
+					need_columns.append([col, True])
+				else:
+					need_columns.append([col, False])
+
 		context = {
+			'columns': need_columns,
 			'data': data,
 			'settings': const.config,
 		}
 		template = 'const_start.html'
 
 		return render(request, template, context)
+
 	elif request.method =='POST':
 		data = Projects.objects.get(pk=pk)
 		const = Const('./settings/'+data.settings.url)
 
+		const.config['ignore_coord'] = request.POST.getlist('need_coords')
 		for domen in const.config:
 			for key in request.POST.keys():
 				if key == 'min_dif_0':
@@ -244,11 +302,53 @@ def compute_clustering(request, pk, type_c):
 		data.comments += 'finded '+str(len(set(df['cluster_id'])))+' clusters\n'
 	elif type_c == 4:
 		sub = Subclusters(const.config)
+		if 'F' not in df.columns:
+			const.add_Fcolumn(df)
 		df = sub.subclustering(df, type_of_closed=2)
 		data.comments += 'finded '+str(len(set(df['subcluster_id'])))+' subclusters\n'
 	data.save()
 	reader.write(df, './df/'+data.attach.url)
 	return redirect(reverse('clustering_start', args=(pk, )))
+
+def classification_start(request, pk):
+	if request.method =='GET':
+		data = Projects.objects.get(pk=pk)
+		data.stage = 4
+		data.save()
+
+		all_projects = Projects.objects.filter(author=request.user)
+
+		other_project = []
+		for projct in all_projects:
+			if projct.pk != pk:
+				other_project.append(projct)
+		context = {
+			'data': data,
+			'other_projects': other_project,
+		}
+
+		template = 'classification_start.html'
+
+		return render(request, template, context)
+
+def classification(request, pk):
+	if request.method =='POST':
+		pk_test = int(request.POST.get('project', None))
+
+		data = Projects.objects.get(pk=pk)
+		const = Const('./settings/'+data.settings.url)
+		df_train = reader.read('./df/'+data.attach.url)
+
+		data_test = Projects.objects.get(pk=pk_test)
+		df_test = reader.read('./df/'+data_test.attach.url)
+
+		classifier = Classsifier(const.config)
+
+		df_test = classifier.predict(df_train, df_test)
+		geeks_object = df_test.to_html()
+
+		return HttpResponse(geeks_object)
+
 
 def del_clustering(request, pk, type_c):
 	data = Projects.objects.get(pk=pk)
@@ -260,7 +360,7 @@ def del_clustering(request, pk, type_c):
 
 	reader.write(df, './df/'+data.attach.url)
 	return redirect(reverse('clustering_start', args=(pk, )))
-	
+
 def delete_project(request, pk):
 	data = Projects.objects.get(pk=pk)
 	data.delete()

@@ -6,8 +6,10 @@ class Subclusters(object):
 
 	def __init__(self, config):
 		self.config = config
-		self.nameignore = ['cluster_id', 'subcluster_id']
-		
+		if 'ignore_coord' in self.config:
+			self.nameignore = ['cluster_id', 'subcluster_id'] + self.config['ignore_coord']
+		else:
+			self.nameignore = ['cluster_id', 'subcluster_id']
 
 	def __get_profile(self, F, p1, p2):
 		# print(p1)
@@ -36,7 +38,9 @@ class Subclusters(object):
 			# for point in points:
 			# 	F_cur = get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)
 			# 	Fs.append([point[1],  point[2], F_cur])
-			Fs = [[point[1],  point[2], get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)] for point in points]#&&&&&&&&&&&???????????
+			# Fs = [[point[1],  point[2], get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)] for point in points]#&&&&&&&&&&&???????????
+			Fs = [[p for p in point[1:] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]] \
+																									for point in points]
 			Fs = sorted(Fs, key = lambda S: S[-1], reverse = False)
 	#         print(Fs)
 

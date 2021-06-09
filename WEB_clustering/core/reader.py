@@ -8,7 +8,7 @@ class Reader(object):
 		self.types = ['int', 'int16', 'int32', 'int64', 'float', 'float16', 'float32', 'float64']
 		self.nameignore = ['id', 'F', 'cluster_id', 'subcluster_id']
 
-	def statistic(self, df,  num_of_intervals=10):#Add distances
+	def statistic(self, df, num_of_intervals=10):#Add distances
 		text = ''
 		text += 'Stated size of data ' + str(df.shape[0]) + '\n'
 		start = df.shape[0]
@@ -37,7 +37,8 @@ class Reader(object):
 				start = finish
 				finish += step
 			text += 'Interval:' + str(d[start:].mean()) + '\n'
-
+			text += '*'*20 + '\n'
+		text += '='*20 + '\n'
 		return text, df
 
 	def split_data(self, df, train_size = 10, shuffle=True):

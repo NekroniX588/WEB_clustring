@@ -15,7 +15,8 @@
         <p class="nav-link {% if clustering_start == request.path %} active {% endif %}" href="{% url 'clustering_start' data.id %}">Кластеризация</p>
       </li>
       <li class="nav-item">
-        <p class="nav-link {% if start_project == request.path %} active {% endif %}" href="{% url 'start_project' data.id %}">Классификация</p>
+        {% url 'classification_start' data.id as classification_start %}
+        <p class="nav-link {% if classification_start == request.path %} active {% endif %}" href="{% url 'classification_start' data.id %}">Классификация</p>
       </li>
 
 
@@ -23,13 +24,18 @@
 
       <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
 
-      <a href="{% url 'statistic' data.id %}">Статистика</a>
+      <p><a href="{% url 'statistic' data.id %}">Статистика</a></p>
 
+      {% if data.stage == 1 %}
+        <p><a href="{% url 'split_data' data.id %}">Разделить</a></p>
+      {% endif %}
       <textarea name="text" cols="40" rows="15">{{data.comments}}</textarea>
       {% if data.stage == 1 or data.stage == 2 %}
         <a href="{% url 'const_start' data.id %}">Далее</a>
       {% elif data.stage == 3 %}
         <a href="{% url 'clustering_start' data.id %}">Далее</a>
+      {% elif data.stage == 4 %}
+        <a href="{% url 'classification_start' data.id %}">Далее</a>
       {% endif %}
 
   	</div>

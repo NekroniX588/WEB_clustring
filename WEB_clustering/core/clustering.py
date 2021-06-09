@@ -10,10 +10,13 @@ logger = logging.getLogger(__name__)
 
 class Clusters():
 	def __init__(self, config):
-		self.nameignore = ['F', 'cluster_id', 'subcluster_id']
 		self.config = config
 		self.contur_config = config['conturs']
 		self.cluster_config = config['isolated_cluster']
+		if 'ignore_coord' in self.config:
+			self.nameignore = ['F', 'cluster_id', 'subcluster_id'] + self.config['ignore_coord']
+		else:
+			self.nameignore = ['F', 'cluster_id', 'subcluster_id']
 
 	def __get_contours(self, F):
 		"""
@@ -85,7 +88,9 @@ class Clusters():
 					x.append((p1[j] + p2[j]*(i+1)/(num_of_segments-i))/(1+(i+1)/(num_of_segments-i)))
 				points.append(np.array(x))
 
-			Fs = [[point[1],  point[2], get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)] \
+			# Fs = [[point[1],  point[2], get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)] \
+			# 																						for point in points]
+			Fs = [[p for p in point[1:] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]] \
 																									for point in points]
 			Fs = sorted(Fs, key = lambda S: S[-1], reverse = False)
 
