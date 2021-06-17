@@ -90,8 +90,13 @@ class Clusters():
 
 			# Fs = [[point[1],  point[2], get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)] \
 			# 																						for point in points]
-			Fs = [[p for p in point[1:] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]] \
-																									for point in points]
+			# Fs = [[p for p in point[1:] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]] \
+			# 																						for point in points]
+			Fs = []
+			for point in points:
+				pp = [p for p in point[1:]] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]
+				Fs.append(pp)
+
 			Fs = sorted(Fs, key = lambda S: S[-1], reverse = False)
 
 			log_message+= 'Разбиение:\n'
@@ -311,13 +316,13 @@ class Clusters():
 		if step == None:
 			df['cluster_id'] = 0
 			for idx, cluster in enumerate(clusters):
-			    for point in cluster:
-			        df.at[df[df['id']==int(point[0])].index, 'cluster_id'] = idx
+				for point in cluster:
+					df.at[df[df['id']==int(point[0])].index, 'cluster_id'] = idx
 			df = df.sort_values(by=['id'])
 		else:
 			for idx, cluster in enumerate(clusters):
-			    for point in cluster:
-			        df.at[df[df['id']==int(point[0])].index, 'cluster_id_'+str(step)] = self.max_index + idx
+				for point in cluster:
+					df.at[df[df['id']==int(point[0])].index, 'cluster_id_'+str(step)] = self.max_index + idx
 			df = df.sort_values(by=['id'])
 			self.max_index = self.max_index + idx + 1
 		return df

@@ -11,13 +11,18 @@
       </li>
       <li class="nav-item">
         {% url 'const_start' data.id as const_start %}
-        <p class="nav-link {% if const_start == request.path %} active {% endif %}" href="{% url 'const_start' data.id %}">Подбор констант</p>
+        <a class="nav-link {% if const_start == request.path %} active {% endif %}" href="{% url 'const_start' data.id %}">Подбор констант</a>
       </li>
       <li class="nav-item">
-        <p class="nav-link {% if clustering_start == request.path %} active {% endif %}" href="{% url 'start_project' data.id %}">Кластеризация</p>
+        <p class="nav-link {% if clustering_start == request.path %} active {% endif %}" href="{% url 'clustering_start' data.id %}">Кластеризация</p>
       </li>
       <li class="nav-item">
-        <p class="nav-link {% if start_project == request.path %} active {% endif %}" href="{% url 'start_project' data.id %}">Классификация</p>
+        {% url 'classification_start' data.id as classification_start %}
+        {% if data.stage == 4 %}
+        <a class="nav-link {% if classification_start == request.path %} active {% endif %}" href="{% url 'classification_start' data.id %}">Классификация</a>
+        {% else %}
+        <p class="nav-link {% if classification_start == request.path %} active {% endif %}" href="{% url 'classification_start' data.id %}">Классификация</p>
+        {% endif %}
       </li>
 
 
@@ -113,7 +118,7 @@
         {% endif %}
       </form>
 
-      <button form="save" type="submit" class="btn btn-primary mt-4">Сохранить</button>
+      <p><button form="save" type="submit" class="btn btn-primary mt-4">Сохранить</button></p>
 
       <p><a href="{% url 'calculate_a' data.id 1 %}">Первый способ</a></p>
 

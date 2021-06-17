@@ -42,9 +42,14 @@ class Fast_Clusters():
 			# 	print('==='*20)
 			# 	print(point)
 			# 	print('==='*20)
-			Fs = [[p for p in point[1:] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]] \
-																									for point in points]
+			# Fs = [[p for p in point[1:] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]] \
+			# 																						for point in points]
 			# print(Fs[:5])
+			Fs = []
+			for point in points:
+				pp = [p for p in point[1:]] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]
+				Fs.append(pp)
+				
 			Fs = sorted(Fs, key = lambda S: S[-1], reverse = False)
 
 			Fmin = np.min([F[-1] for F in Fs])
@@ -119,13 +124,13 @@ class Fast_Clusters():
 		if step == None:
 			df['cluster_id'] = 0
 			for idx, cluster in enumerate(clusters):
-			    for point in clusters[cluster]:
-			        df.at[df[df['id']==int(point[0])].index, 'cluster_id'] = cluster
+				for point in clusters[cluster]:
+					df.at[df[df['id']==int(point[0])].index, 'cluster_id'] = cluster
 			df = df.sort_values(by=['id'])
 		else:
 			for idx, cluster in enumerate(clusters):
-			    for point in clusters[cluster]:
-			        df.at[df[df['id']==int(point[0])].index, 'cluster_id_'+str(step)] = cluster
+				for point in clusters[cluster]:
+					df.at[df[df['id']==int(point[0])].index, 'cluster_id_'+str(step)] = cluster
 			df = df.sort_values(by=['id'])
 			self.max_index = self.max_index + idx + 1
 		return df

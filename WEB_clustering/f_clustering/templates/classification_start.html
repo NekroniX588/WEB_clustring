@@ -1,0 +1,60 @@
+{% extends 'main.html' %}
+
+  {% block content %}
+    
+    {% load f_extras %}
+
+  	<ul class="nav nav-pills justify-content-center">
+      <li class="nav-item">
+        {% url 'start_project' data.id as start_project %}
+        <a class="nav-link {% if start_project == request.path %} active {% endif %}" href="{% url 'start_project' data.id %}">Начальная страница</a>
+      </li>
+      <li class="nav-item">
+        {% url 'const_start' data.id as const_start %}
+        <a class="nav-link {% if const_start == request.path %} active {% endif %}" href="{% url 'const_start' data.id %}">Подбор констант</a>
+      </li>
+      <li class="nav-item">
+        {% url 'clustering_start' data.id as const_start %}
+        <p class="nav-link {% if clustering_start == request.path %} active {% endif %}" href="{% url 'clustering_start' data.id %}">Кластеризация</p>
+      </li>
+      <li class="nav-item">
+        {% if data.stage == 4 %}
+        <a class="nav-link {% if classification_start == request.path %} active {% endif %}" href="{% url 'classification_start' data.id %}">Классификация</a>
+        {% else %}
+        <p class="nav-link {% if classification_start == request.path %} active {% endif %}" href="{% url 'classification_start' data.id %}">Классификация</p>
+        {% endif %}
+      </li>
+
+
+  	<div class="container">
+
+      <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
+
+      <form action="{% url 'const_start' data.id %}" method="post" id="none">
+        {% csrf_token %}
+        {% for col in columns %}
+          <p>
+            <input name="need_coords" class="form-check-input" type="checkbox" value="{{col.0}}" id="flexCheckDefault" {% if col.1 %} checked {% endif %} disabled>
+            <label class="form-check-label" for="flexCheckDefault">
+              {{col.0}}
+            </label>
+          </p> 
+        {% endfor %}
+
+      </form>
+
+      <form action="{% url 'classification' data.id %}" method="post" id="save">
+        {% csrf_token %}
+        <p><select name="project">
+          {% for project in other_projects%}
+            <option value={{project.id}}>{{project.name}}</option>
+          {% endfor %}
+        </select></p>
+      </form>
+      <p><button form="save" type="submit" class="btn btn-primary mt-4">Классификировать</button></p>
+
+      <textarea name="text" cols="40" rows="15">{{data.comments}}</textarea>
+      <a href="">Далее</a>
+
+  	</div>
+  {% endblock %}

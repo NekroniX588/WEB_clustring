@@ -24,13 +24,13 @@ class Classsifier():
         names_input = list(df_predict)[1:]#Выделяем все имена из данных для предсказания
         needed_names = ['id']
         for name in names_input:
-            if name in names_ouput and name not in self.ignorename:
+            if name in names_ouput and name not in self.nameignore:
                 needed_names.append(name)
         if len(needed_names)==1:
             print('Нет общих координат') #Если нет общих координат, то прерываем программу
             return df_predict
         
-        df_train = df_train[needed_names+self.ignorename] # Выделяем необходимые имена
+        df_train = df_train[needed_names+self.nameignore] # Выделяем необходимые имена
         df_predict = df_predict[needed_names] # Выделяем необходимые имена
         df_predict = self.__norm(df_predict) #Нормируем данные
         

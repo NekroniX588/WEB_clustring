@@ -159,8 +159,9 @@ def const_start(request,pk):
 		
 		data = Projects.objects.get(pk=pk)
 		df = reader.read('./df/'+data.attach.url)
-		data.stage = 2
-		data.save()
+		if data.stage<=2:
+			data.stage = 2
+			data.save()
 		const = Const('./settings/'+data.settings.url)
 
 		need_columns = []
@@ -186,6 +187,8 @@ def const_start(request,pk):
 
 		const.config['ignore_coord'] = request.POST.getlist('need_coords')
 		for domen in const.config:
+			if domen == 'ignore_coord':
+				continue
 			for key in request.POST.keys():
 				if key == 'min_dif_0':
 					const.config['isolated_cluster']['min_dif'][0] = float(request.POST[key])
@@ -227,8 +230,9 @@ def const_reload(request, pk):
 def clustering_start(request,pk):
 	if request.method =='GET':
 		data = Projects.objects.get(pk=pk)
-		data.stage = 3
-		data.save()
+		if data.stage<=3:
+			data.stage = 3
+			data.save()
 
 		status_del_cluster = None
 		status_del_subcluster = None
@@ -313,16 +317,29 @@ def compute_clustering(request, pk, type_c):
 def classification_start(request, pk):
 	if request.method =='GET':
 		data = Projects.objects.get(pk=pk)
-		data.stage = 4
+		if data.stage<=4:
+			data.stage = 4
+			data.save()
 		data.save()
 
 		all_projects = Projects.objects.filter(author=request.user)
+
+		df = reader.read('./df/'+data.attach.url)
+		const = Const('./settings/'+data.settings.url)
+		need_columns = []
+		for col in df.columns:
+			if 'X' in col:
+				if col in const.nameignore:
+					need_columns.append([col, True])
+				else:
+					need_columns.append([col, False])
 
 		other_project = []
 		for projct in all_projects:
 			if projct.pk != pk:
 				other_project.append(projct)
 		context = {
+			'columns': need_columns,
 			'data': data,
 			'other_projects': other_project,
 		}
@@ -330,6 +347,15 @@ def classification_start(request, pk):
 		template = 'classification_start.html'
 
 		return render(request, template, context)
+
+	elif request.method =='POST':
+		data = Projects.objects.get(pk=pk)
+		const = Const('./settings/'+data.settings.url)
+
+		const.config['ignore_coord'] = request.POST.getlist('need_coords')
+
+		const.save_consts('./settings/'+data.settings.url)
+		return redirect(reverse('classification_start', args=(pk, )))
 
 def classification(request, pk):
 	if request.method =='POST':

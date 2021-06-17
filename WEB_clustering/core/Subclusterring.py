@@ -39,8 +39,13 @@ class Subclusters(object):
 			# 	F_cur = get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)
 			# 	Fs.append([point[1],  point[2], F_cur])
 			# Fs = [[point[1],  point[2], get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)] for point in points]#&&&&&&&&&&&???????????
-			Fs = [[p for p in point[1:] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]] \
-																									for point in points]
+			# Fs = [[p for p in point[1:] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]] \
+			# 																						for point in points]
+			Fs = []
+			for point in points:
+				pp = [p for p in point[1:]] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]
+				Fs.append(pp)
+
 			Fs = sorted(Fs, key = lambda S: S[-1], reverse = False)
 	#         print(Fs)
 
@@ -273,6 +278,9 @@ class Subclusters(object):
 			for cluster in clusters:
 				current = df[df['cluster_id']==cluster]
 				if current.shape[0]<2:#Исправить если в кластере 1 точка
+					# print(df[df['cluster_id']==cluster]['subcluster_id'].shape)
+					df.at[df[df['cluster_id']==cluster].index, 'subcluster_id'] = self.max_index_sub
+					self.max_index_sub += 1
 					continue
 				need_names = [n for n in current.columns if n not in self.nameignore] 
 				current = current[need_names]

@@ -360,7 +360,7 @@ class Const(object):
 		down_a = started_a * (self.config['consts']['power_koef']**-down_step)
 		down_summ = self.__one_step_integral_Y(X_percent_matrix, arr_Y_step, X, down_a)
 
-		if down_summ >current_summ:
+		if down_summ > current_summ:
 			print('going down')
 			while down_summ > current_summ:
 				print('going down')
