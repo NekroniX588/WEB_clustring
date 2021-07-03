@@ -20,6 +20,7 @@ class Classsifier():
         return df
     
     def predict(self, df_train, df_predict, a=None):
+        text = ''
         names_ouput = list(df_train)[1:]#Выделяем все имена из обучающих данных  
         names_input = list(df_predict)[1:]#Выделяем все имена из данных для предсказания
         needed_names = ['id']
@@ -27,22 +28,43 @@ class Classsifier():
             if name in names_ouput and name not in self.nameignore:
                 needed_names.append(name)
         if len(needed_names)==1:
-            print('Нет общих координат') #Если нет общих координат, то прерываем программу
+            text += 'Нет общих координат\n'#Если нет общих координат, то прерываем программу
             return df_predict
-        
-        df_train = df_train[needed_names+self.nameignore] # Выделяем необходимые имена
+
+        nameignore = [name for name in self.nameignore if name in df_train.columns]
+
+        df_train = df_train[needed_names+nameignore] # Выделяем необходимые имена
         df_predict = df_predict[needed_names] # Выделяем необходимые имена
         df_predict = self.__norm(df_predict) #Нормируем данные
         
         inputs = df_predict.iloc[:].values
         #Работа с ребрами
-        for cluster in sorted(df_train['cluster_id'].unique()): #проходим все кластеры
-            time_df = df_train[lambda x: x['cluster_id']==cluster] #Выделяем все строки относящиеся к этому кластеру
-            for subcluster in sorted(time_df['subcluster_id'].unique()): #проходим все подкластеры
-                name = 'F_'+str(cluster) +'_' + str(subcluster) # Формируем имя столбца
-                time_dfs = time_df[lambda x: x['subcluster_id']==subcluster] #Выделяем все строки относящиеся к этому подкластеру
+        if 'cluster_id' in df_train.columns and 'subcluster_id' in df_train.columns:
+            for cluster in sorted(df_train['cluster_id'].unique()): #проходим все кластеры
+                time_df = df_train[lambda x: x['cluster_id']==cluster] #Выделяем все строки относящиеся к этому кластеру
+                for subcluster in sorted(time_df['subcluster_id'].unique()): #проходим все подкластеры
+                    name = 'F_'+str(cluster) +'_' + str(subcluster) # Формируем имя столбца
+                    time_dfs = time_df[lambda x: x['subcluster_id']==subcluster] #Выделяем все строки относящиеся к этому подкластеру
+                    F = []
+                    for line in inputs:
+                        F.append(get_F_example(time_dfs[needed_names].iloc[:].values, self.config['consts']['a'], line)) #Вычисляем F для каждой строки данных для предсказания
+                    df_predict[name] = F
+        elif 'cluster_id' in df_train.columns:
+            for cluster in sorted(df_train['cluster_id'].unique()): #проходим все кластеры
+                time_df = df_train[lambda x: x['cluster_id']==cluster] #Выделяем все строки относящиеся к этому кластеру
+                name = 'F_'+str(cluster) +'_NuN' # Формируем имя столбца
                 F = []
                 for line in inputs:
-                    F.append(get_F_example(time_dfs[needed_names].iloc[:].values, self.config['consts']['a'], line)) #Вычисляем F для каждой строки данных для предсказания
+                    F.append(get_F_example(time_df[needed_names].values, self.config['consts']['a'], line)) #Вычисляем F для каждой строки данных для предсказания
                 df_predict[name] = F
-        return df_predict
+        elif 'subcluster_id' in df_train.columns:
+            for subcluster in sorted(df_train['subcluster_id'].unique()): #проходим все сабкластеры
+                time_df = df_train[lambda x: x['subcluster_id']==subcluster] #Выделяем все строки относящиеся к этому сабкластеру
+                name = 'F_NuN_'+str(subcluster) # Формируем имя столбца
+                F = []
+                for line in inputs:
+                    F.append(get_F_example(time_df[needed_names].values, self.config['consts']['a'], line)) #Вычисляем F для каждой строки данных для предсказания
+                df_predict[name] = F
+        else:
+            text += 'Wrong format of data\n'
+        return df_predict, text

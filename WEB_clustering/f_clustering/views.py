@@ -27,7 +27,6 @@ reader = Reader()
 
 def main(request):
 	context = {
-		'name': 'Pidr'
 	}
 	template = 'main.html'
 	return render(request, template, context)
@@ -95,7 +94,7 @@ def table(request, pk):
 def split_data(request, pk):
 	data = Projects.objects.get(pk=pk)
 	df = reader.read('./df'+data.attach.url)
-	df_train, df_test = reader.split_data(df)
+	df_train, df_test = reader.split_data(df, train_size = int(request.POST['split_size']))
 	name = data.name
 	data.delete()
 
@@ -127,7 +126,7 @@ def split_data(request, pk):
 def statistic(request, pk):
 	data = Projects.objects.get(pk=pk)
 	df = reader.read('./df/'+data.attach.url)
-	text, df = reader.statistic(df)
+	text, df = reader.statistic(df, num_of_intervals = int(request.POST['num_interval']))
 	data.comments += text
 	data.save()
 	reader.write(df, './df/'+data.attach.url)
@@ -138,7 +137,7 @@ def f_statistic(request, pk):
 	df = reader.read('./df/'+data.attach.url)
 	const = Const('./settings/'+data.settings.url)
 	const.add_Fcolumn(df)
-	text = const.statistic(df)
+	text = const.statistic(df, num_of_intervals = int(request.POST['num_interval']))
 	data.comments += text
 	data.save()
 	return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
@@ -150,6 +149,7 @@ def project_start(request,pk):
 
 	context = {
 		'data': data,
+		'rows': df.shape[0],
 	}
 	template = 'project_start.html'
 	return render(request, template, context)
@@ -214,7 +214,10 @@ def calculate_a(request, pk, type_optimization):
 
 	const = Const('./settings/'+data.settings.url)
 	const.norm(df)
-	const.calculate_a(df, type_optimization)
+	text = const.calculate_a(df, type_optimization)
+	data.comments += text
+	data.save()
+
 	const.save_consts('./settings/'+data.settings.url)
 
 	return redirect(reverse('const_start', args=(pk, )))
@@ -230,7 +233,9 @@ def const_reload(request, pk):
 def clustering_start(request,pk):
 	if request.method =='GET':
 		data = Projects.objects.get(pk=pk)
-		if data.stage<=3:
+		const = Const('./settings/'+data.settings.url)
+		
+		if data.stage<3:
 			data.stage = 3
 			data.save()
 
@@ -250,8 +255,6 @@ def clustering_start(request,pk):
 		else:
 			status_subcluster = True
 
-		const = Const('./settings/'+data.settings.url)
-
 		context = {
 			'data': data,
 			'settings': const.config,
@@ -260,6 +263,7 @@ def clustering_start(request,pk):
 			'status_subcluster': status_subcluster,
 			'status_del_cluster': status_del_cluster,
 			'status_del_subcluster': status_del_subcluster,
+			'rows': df.shape[0],
 		}
 		template = 'clustering_start.html'
 
@@ -317,10 +321,9 @@ def compute_clustering(request, pk, type_c):
 def classification_start(request, pk):
 	if request.method =='GET':
 		data = Projects.objects.get(pk=pk)
-		if data.stage<=4:
+		if data.stage<4:
 			data.stage = 4
 			data.save()
-		data.save()
 
 		all_projects = Projects.objects.filter(author=request.user)
 
@@ -370,7 +373,9 @@ def classification(request, pk):
 
 		classifier = Classsifier(const.config)
 
-		df_test = classifier.predict(df_train, df_test)
+		df_test, text = classifier.predict(df_train, df_test)
+		data.comments += text
+		data.save()
 		geeks_object = df_test.to_html()
 
 		return HttpResponse(geeks_object)

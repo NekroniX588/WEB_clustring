@@ -9,7 +9,6 @@ from sklearn.metrics import pairwise_distances
 
 class Const(object):
 	def __init__(self, path=None):
-		self.nameignore = ['cluster_id', 'subcluster_id']
 		self.status = False
 		if path is None:
 			self.zz = yaml.load(open("./settings.yaml", 'r'))
@@ -51,7 +50,6 @@ class Const(object):
 		Inplace method for normilaze coords
 		args:
 		df -- data frame ['id', 'X1', 'X2', ..., 'Xn']
-
 		'''
 		self.config['norms'] = {}
 		need_names = [n for n in df.columns if n not in self.nameignore + ['id']] 
@@ -75,10 +73,12 @@ class Const(object):
 			text += 'F_max = %.4f, F_min = %.4f \n'%(max(df['F']),min(df['F']))
 			F = df['F'].values
 			F.sort()
+			print(F)
 			start = 0
 			finish = len(F)//num_of_intervals
 			step = len(F)//num_of_intervals
 			for i in range(num_of_intervals-1):
+				print(F[start:finish])
 				text += 'Interval %.d:% 5f \n'%(i,F[start:finish].mean())
 				start = finish
 				finish += step
@@ -207,7 +207,7 @@ class Const(object):
 			for step in arr_Y_step:#Итерируемся по матрице шагов Y%
 				
 				# Выбираем текущий Y% матрицы
-				lenght = int(np.round(len(F)*step/100, 0))
+				lenght = max(int(np.round(len(F)*step/100, 0)),1)
 				Y_percent_matrix = np.array(F[:lenght])
 
 				#Высчитываем сумму ребер
@@ -262,19 +262,17 @@ class Const(object):
 
 			list_a.append(a)#Добавляем текущее значение а в список для хранения всех а
 
-			
 			F = get_F_example(X, a) #Вычисляем F для матрицы (!!!ВНИМАНИЕ ФОРМУЛА!!!) [id, X1,..,Xn, F]
 			
 			def F_sort(arr):#Вспомогательная функция для сортировки
 				return arr[-1]
 			F.sort(key=F_sort,reverse = True)#Сортируем F по убыванию
-			plot_s = []
+
 			for i, step in enumerate(arr_Y_step):#Итерируемся по матрице шагов Y%
 				
 				# Выбираем текущий Y% матрицы
-				lenght = int(np.round(len(F)*step/100, 0))
+				lenght = max(int(np.round(len(F)*step/100, 0)),1)
 				Y_percent_matrix = np.array(F[:lenght])
-
 				#Высчитываем сумму ребер
 				summ = 0
 				for edge in X_percent_matrix:# Проходим построчно матрицу X% - row = [id вершины 1, id вершины 2, расстояние]
@@ -308,7 +306,7 @@ class Const(object):
 		for i, step in enumerate(arr_Y_step):#Итерируемся по матрице шагов Y%
 			
 			# Выбираем текущий Y% матрицы
-			lenght = int(np.round(len(F)*step/100, 0))
+			lenght = max(int(np.round(len(F)*step/100, 0)),1)
 			Y_percent_matrix = np.array(F[:lenght])
 
 			#Высчитываем сумму ребер
@@ -374,9 +372,10 @@ class Const(object):
 
 		return current_a
 
-	def __calculate_const(self, X, type = 1):
+	def __calculate_const(self, X, type = 1, cluster_id=None, subcluster_id=None):
 		#
 		matrix = []
+		map_index = {k:index for k,index in enumerate(X[:,0])}
 		distance_matrix = np.tril(pairwise_distances(X[:,1:]))#Вычисляем матрицу расстояний [len(id), len(id)]
 		#[0,   0,   0]
 		#[1.3, 0,   0] - пример
@@ -385,18 +384,27 @@ class Const(object):
 		for i in range(distance_matrix.shape[0]):
 			for j in range(distance_matrix.shape[1]):
 				if distance_matrix[i,j]!=0:
-					row = [i+1, j+1, distance_matrix[i,j]]
-					matrix.append(row)
+					row = [map_index[i], map_index[j], distance_matrix[i,j]]
+					if cluster_id is not None and subcluster_id is not None:
+						if cluster_id[map_index[i]]==cluster_id[map_index[j]] and subcluster_id[map_index[i]]==subcluster_id[map_index[j]]:
+							matrix.append(row)
+					elif cluster_id is not None:
+						if cluster_id[map_index[i]]==cluster_id[map_index[j]]:
+							matrix.append(row)
+					elif subcluster_id is not None:
+						if subcluster_id[map_index[i]]==subcluster_id[map_index[j]]:
+							matrix.append(row)
+					else:
+						matrix.append(row)
 		#[1, 2, 1.3]
 		#[1, 3, 1.8] - пример
 		#[2, 3, 5.2]
-		def sort_dist(row): #Вспомогательная функция для сортировки
-			return row[2]
-		matrix.sort(key=sort_dist)
+		print(len(matrix))
+		matrix.sort(key=lambda x: x[2])
 		distance_matrix = np.array(matrix) #Переводим матрицу в np.array
 
 		#Выбираем X% матрицы расстояний
-		lenght = int(np.round(distance_matrix.shape[0]*(self.config['consts']['percent_X']/100), 0))
+		lenght = max(int(np.round(distance_matrix.shape[0]*(self.config['consts']['percent_X']/100), 0)), 1)
 		start = 0
 		finish = lenght
 		time_d = distance_matrix[start:finish]
@@ -431,21 +439,29 @@ class Const(object):
 		df - data frame ['id', 'X1', 'X2', ..., 'Xn']
 		type_of_optimization - type of optimization (type1 - using max; type2 - using threshold) default = type2
 		'''
+		text = ''
 		if self.status == True:
-			print('You are calculate consts yet. Please, reload Const object from default settings')
-			return None
+			text += 'You are calculate consts yet. Please, reload const from default settings\n'
+			return text
+
+		cluster_id = None
+		subcluster_id = None
+		if 'cluster_id' in df.columns:
+			cluster_id = {item[0]:item[1] for item in df[['id','cluster_id']].values}
+			
+		if 'subcluster_id' in df.columns:
+			subcluster_id = {item[0]:item[1] for item in df[['id','subcluster_id']].values}
 
 		need_names = [n for n in df.columns if n not in self.nameignore] 
-		X = df[need_names].iloc[:].values#приводим их np.array [id, X1, X2]
-		print(X.shape)
+		X = df[need_names].values#приводим их np.array [id, X1, X2]
 		if type_of_optimization==1:
-			max_a = self.__calculate_const(X, 1)
+			max_a = self.__calculate_const(X, 1, cluster_id, subcluster_id)
 		elif type_of_optimization==2:
-			max_a = self.__calculate_const(X, 2)
+			max_a = self.__calculate_const(X, 2, cluster_id, subcluster_id)
 		elif type_of_optimization==3:
-			max_a = self.__calculate_const(X, 3)
+			max_a = self.__calculate_const(X, 3, cluster_id, subcluster_id)
 		elif type_of_optimization==4:
-			max_a = self.__calculate_const(X, 4)
+			max_a = self.__calculate_const(X, 4, cluster_id, subcluster_id)
 		else:
 			print('Not implemented')
 		#Изменяем необходимые константы
@@ -463,4 +479,5 @@ class Const(object):
 			+ max_a * self.config['isolated_cluster']['min_dif'][1])
 		self.config['isolated_cluster']['min_dif'] = float(np.round(value, self.config['consts']['round_const']))
 		self.status = True
-
+		text += 'Everything good :)\n'
+		return text

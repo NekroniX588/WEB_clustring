@@ -14,10 +14,15 @@
         <a class="nav-link {% if const_start == request.path %} active {% endif %}" href="{% url 'const_start' data.id %}">Подбор констант</a>
       </li>
       <li class="nav-item">
-        {% url 'clustering_start' data.id as const_start %}
+        {% url 'clustering_start' data.id as clustering_start %}
+        {% if data.stage >= 3 %}
+        <a class="nav-link {% if clustering_start == request.path %} active {% endif %}" href="{% url 'clustering_start' data.id %}">Кластеризация</a>
+        {% else %}
         <p class="nav-link {% if clustering_start == request.path %} active {% endif %}" href="{% url 'clustering_start' data.id %}">Кластеризация</p>
+        {% endif %}
       </li>
       <li class="nav-item">
+        {% url 'classification_start' data.id as classification_start %}
         {% if data.stage == 4 %}
         <a class="nav-link {% if classification_start == request.path %} active {% endif %}" href="{% url 'classification_start' data.id %}">Классификация</a>
         {% else %}

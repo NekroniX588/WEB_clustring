@@ -12,7 +12,12 @@
         <a class="nav-link {% if const_start == request.path %} active {% endif %}" href="{% url 'const_start' data.id %}">Подбор констант</a>
       </li>
       <li class="nav-item">
+        {% url 'clustering_start' data.id as clustering_start %}
+        {% if data.stage >= 3 %}
+        <a class="nav-link {% if clustering_start == request.path %} active {% endif %}" href="{% url 'clustering_start' data.id %}">Кластеризация</a>
+        {% else %}
         <p class="nav-link {% if clustering_start == request.path %} active {% endif %}" href="{% url 'clustering_start' data.id %}">Кластеризация</p>
+        {% endif %}
       </li>
       <li class="nav-item">
         {% url 'classification_start' data.id as classification_start %}
@@ -27,12 +32,26 @@
   	<div class="container">
 
       <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
+      <hr/>
 
-      <p><a href="{% url 'statistic' data.id %}">Статистика</a></p>
+      <form action="{% url 'statistic' data.id %}" method="post" id="statistic">
+          {% csrf_token %}
+          <p>Количество интервалов</p>
+          <p><input name="num_interval" type="number" min=2 max={{rows}} step=1 value=10></p>
+        </form>
+      <p><button form="statistic" type="submit" class="btn btn-primary mt-1">Статистика</button></p>
+      <hr/>
 
       {% if data.stage == 1 %}
-        <p><a href="{% url 'split_data' data.id %}">Разделить</a></p>
+        <form action="{% url 'split_data' data.id %}" method="post" id="split">
+          {% csrf_token %}
+          <p>Размер тренировочной выборки, %</p>
+          <p><input name="split_size" type="number" min=1 max=99 step=1 value=10></p>
+        </form>
       {% endif %}
+      <p><button form="split" type="submit" class="btn btn-primary mt-1">Разделить</button></p>
+      <hr/>
+
       <textarea name="text" cols="40" rows="15">{{data.comments}}</textarea>
       {% if data.stage == 1 or data.stage == 2 %}
         <a href="{% url 'const_start' data.id %}">Далее</a>

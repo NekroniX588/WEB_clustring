@@ -23,11 +23,10 @@ class Reader(object):
 		for col in df_correct.columns:
 			x = df_correct[col].values
 			d = pairwise_distances(x[:, np.newaxis]).ravel()#Удалить главную диагональ
-			print((d.shape[0]-df.shape[0])//2)
 			d_abs = (d[d==0].shape[0]-df.shape[0])//2
 			d_rel = ((d[d==0].shape[0]-df.shape[0])//2)/((d.shape[0]-df.shape[0])//2)
-			text += str(col) + ' contain absolute:' + str(d_abs) + '\n'
-			text += str(col) + ' contain relation:' + str(round(d_rel,5))+ '\n'
+			text += str(col) + ' contain zeros distance absolute:' + str(d_abs) + '\n'
+			text += str(col) + ' contain zeros distance relation:' + str(round(d_rel,5))+ '\n'
 			d.sort()
 			start = 0
 			finish = len(d)//num_of_intervals
@@ -73,7 +72,8 @@ class Reader(object):
 		Checks if input dataframe's columns are in the right format
 		mode -- read or write 
 		'''
-		print(df.columns)
+		if df.shape[0]<5:
+			return False
 		coords_nums = [int(col_name[1:]) for col_name in df.columns if col_name not in self.nameignore]
 		#Add information ('F', Cluster_Id, Subcluster)
 		is_asc = coords_nums == sorted(coords_nums)

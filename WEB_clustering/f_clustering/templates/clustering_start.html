@@ -11,11 +11,15 @@
       </li>
       <li class="nav-item">
         {% url 'const_start' data.id as const_start %}
-        <p class="nav-link {% if const_start == request.path %} active {% endif %}" href="{% url 'const_start' data.id %}">Подбор констант</p>
+        <a class="nav-link {% if const_start == request.path %} active {% endif %}" href="{% url 'const_start' data.id %}">Подбор констант</a>
       </li>
       <li class="nav-item">
-        {% url 'clustering_start' data.id as const_start %}
+        {% url 'clustering_start' data.id as clustering_start %}
+        {% if data.stage >= 3 %}
+        <a class="nav-link {% if clustering_start == request.path %} active {% endif %}" href="{% url 'clustering_start' data.id %}">Кластеризация</a>
+        {% else %}
         <p class="nav-link {% if clustering_start == request.path %} active {% endif %}" href="{% url 'clustering_start' data.id %}">Кластеризация</p>
+        {% endif %}
       </li>
       <li class="nav-item">
         {% url 'classification_start' data.id as classification_start %}
@@ -31,7 +35,13 @@
 
       <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
 
-      <p><a href="{% url 'f_statistic' data.id %}">Статистика по F</a></p>
+      <form action="{% url 'f_statistic' data.id %}" method="post" id="statistic">
+          {% csrf_token %}
+          <p>Количество интервалов</p>
+          <p><input name="num_interval" type="number" min=2 max={{rows}} step=1 value=10></p>
+        </form>
+      <p><button form="statistic" type="submit" class="btn btn-primary mt-1">Статистика по F</button></p>
+      <hr/>
 
       <form action="{% url 'clustering_start' data.id %}" method="post" id="save">
         {% csrf_token %}
