@@ -33,7 +33,8 @@
 
       <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
       <hr/>
-
+      <p><a href="{% url 'download_data' data.id %}">Скачать данные</a></p>
+      <hr/>
       <form action="{% url 'statistic' data.id %}" method="post" id="statistic">
           {% csrf_token %}
           <p>Количество интервалов</p>
@@ -48,9 +49,10 @@
           <p>Размер тренировочной выборки, %</p>
           <p><input name="split_size" type="number" min=1 max=99 step=1 value=10></p>
         </form>
-      {% endif %}
-      <p><button form="split" type="submit" class="btn btn-primary mt-1">Разделить</button></p>
+        <p><button form="split" type="submit" class="btn btn-primary mt-1">Разделить</button></p>
       <hr/>
+      {% endif %}
+      
 
       <textarea name="text" cols="40" rows="15">{{data.comments}}</textarea>
       {% if data.stage == 1 or data.stage == 2 %}

@@ -31,4 +31,6 @@ urlpatterns = [
     path('classification_page/<int:pk>', views.classification_start, name='classification_start'),
     path('classification/<int:pk>', views.classification, name='classification'),
 
+    path('download_data/<int:pk>', views.download_data, name='download_data'),
+    path('download_settings/<int:pk>', views.download_settings, name='download_settings'),
 ]

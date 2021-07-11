@@ -1,0 +1,38 @@
+consts:
+  Y_step: 2.5
+  a: 0.09
+  const: 0.25
+  down_steps: 4
+  max_depth: 10
+  percent_X: 5
+  percent_Y: 33
+  percent_for_norms: 40
+  percent_of_zeros: 0.005
+  power_koef: 1.16
+  round_const: 2
+  threshold: 0.8
+  up_steps: 6
+conturs:
+  contour_points: 50
+  min_diff:
+  - 20
+  - 20
+  min_points: 30
+  num_of_lenghts: 4
+isolated_cluster:
+  constU1: 0.05
+  divider: 2
+  max_div_num: 8
+  merge_threshold: 1.75
+  min_dif:
+  - 20
+  - 20
+  min_len: 0.05
+knots:
+  min_fuses_num: 15
+  stop_const: 0.09
+norms:
+  X1: 4.09
+  X2: 4.8
+subcluster:
+  F_step: 0.001

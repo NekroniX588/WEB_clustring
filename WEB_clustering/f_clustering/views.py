@@ -19,7 +19,8 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
 from django.core.files import File
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse, Http404
+from django.conf import settings
 # Create your views here.
 
 
@@ -90,6 +91,26 @@ def table(request, pk):
 	df = reader.read('./df'+data.attach.url)
 	geeks_object = df.to_html()
 	return HttpResponse(geeks_object)
+
+def download_data(request, pk):
+    data = Projects.objects.get(pk=pk)
+    file_path = './df'+data.attach.url
+    if os.path.exists(file_path):
+        with open(file_path, 'rb') as fh:
+            response = HttpResponse(fh.read(), content_type="application/liquid")
+            response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
+            return response
+    raise Http404
+
+def download_settings(request, pk):
+    data = Projects.objects.get(pk=pk)
+    file_path = './settings/'+data.settings.url
+    if os.path.exists(file_path):
+        with open(file_path, 'rb') as fh:
+            response = HttpResponse(fh.read(), content_type="application/liquid")
+            response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
+            return response
+    raise Http404
 
 def split_data(request, pk):
 	data = Projects.objects.get(pk=pk)
@@ -173,6 +194,7 @@ def const_start(request,pk):
 					need_columns.append([col, False])
 
 		context = {
+			'const_status': const.status,
 			'columns': need_columns,
 			'data': data,
 			'settings': const.config,
@@ -184,6 +206,8 @@ def const_start(request,pk):
 	elif request.method =='POST':
 		data = Projects.objects.get(pk=pk)
 		const = Const('./settings/'+data.settings.url)
+
+		calulate_with_started_a = None
 
 		const.config['ignore_coord'] = request.POST.getlist('need_coords')
 		for domen in const.config:
@@ -198,14 +222,22 @@ def const_start(request,pk):
 					const.config['conturs']['min_diff'][0] = float(request.POST[key])
 				elif key == 'min_diff_1':
 					const.config['conturs']['min_diff'][1] = float(request.POST[key])
+				elif key == 'started_a':
+					if request.POST[key] != '':
+						calulate_with_started_a = float(request.POST[key])
 				if key in const.config[domen]:
 					if key in ['min_points', 'contour_points', 'num_of_lenghts', 'divider', 'max_div_num', 'round_const',\
 					'down_steps', 'up_steps', 'max_depth']:
 						const.config[domen][key] = int(round(float(request.POST[key]),0))
 					else:
 						const.config[domen][key] = float(request.POST[key])
-
 		const.save_consts('./settings/'+data.settings.url)
+		if calulate_with_started_a is not None:
+			text = const.calculate_a(None, 3, calulate_with_started_a)
+			data.comments += text
+			data.save()
+			const.save_consts('./settings/'+data.settings.url)
+
 		return redirect(reverse('const_start', args=(pk, )))
 
 def calculate_a(request, pk, type_optimization):

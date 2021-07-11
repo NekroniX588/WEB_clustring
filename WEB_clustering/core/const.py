@@ -114,13 +114,13 @@ class Const(object):
 		with open(path, 'w') as file:
 			documents = yaml.dump(self.config, file)
 
-	def add_Fcolumn(self, df):
+	def add_Fcolumn(self, df, force=False):
 		'''
 		Inplace method for normilaze coords
 		args:
 		df -- data frame ['id', 'X1', 'X2', ..., 'Xn']
 		'''
-		if self.status == False:
+		if self.status == False and not force:
 			print("Const a is not calculated yet. F can't be calculated") 
 			return
 		need_names = [n for n in df.columns if n not in self.nameignore] 
@@ -372,6 +372,84 @@ class Const(object):
 
 		return current_a
 
+	def get_profile(self, F, p1, p2):
+		#Функция рассчета профиля F - матрица формата ['id','x1',...,'xn','F'], p1, p2 - точки формата ['id','x1',...,'xn','F']
+
+		# if np.linalg.norm(np.array(p1[1:-1]) - np.array(p2[1:-1]))/self.cluster_config['divider'] <= self.contur_config['min_diff']:
+		if np.linalg.norm(np.array(p1[1:]) - np.array(p2[1:])) <= self.config['isolated_cluster']['min_len']:
+			return None
+		else:
+			div_num = 0
+			segment_len = np.linalg.norm( np.array(p1[1:]) - np.array(p2[1:]))
+			while (div_num < self.config['isolated_cluster']['max_div_num']-1) and (segment_len > self.config['isolated_cluster']['min_len']):
+				div_num+= 1
+				num_of_segments = (self.config['isolated_cluster']['divider']+1)*div_num + self.config['isolated_cluster']['divider']
+				segment_len = np.linalg.norm(np.array(p1[1:]) - np.array(p2[1:]))/num_of_segments
+
+			if div_num == 0:
+				return None
+
+			points = []
+			for i in range(num_of_segments):
+				x = [-1.]
+				for j in range(1, len(p1)):
+					x.append((p1[j] + p2[j]*(i+1)/(num_of_segments-i))/(1+(i+1)/(num_of_segments-i)))
+				points.append(np.array(x))
+
+			Fs = []
+			for point in points:
+				pp = [p for p in point[1:]] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]
+				Fs.append(pp)
+			print(Fs)
+				
+			Fs = sorted(Fs, key = lambda S: S[-1], reverse = False)
+
+			Fmin = np.min([F[-1] for F in Fs])
+			Fstar = p1[-1] if  p1[-1] < p2[-1] else p2[-1]
+
+			if Fstar - Fmin >= self.cluster_config['min_dif']:
+				return 'different', Fstar - Fmin
+			else:
+				return 'common', Fstar - Fmin
+
+	def calculate_dif(self, points, F):
+
+		def eucl(p1,p2):
+			return sum((p1 - p2)**2)
+
+		points = np.concatenate([points,F.reshape((-1,1))],axis=1)
+		X = pairwise_distances(points[:,1:-1])
+
+		max_i = 0
+		max_j = 0
+		max_v = 0
+		for i in range(X.shape[0]):
+			for j in range(i+1,X.shape[1]):
+				if X[i,j]>max_v:
+					max_i = i
+					max_j = j
+					max_v = X[i,j]
+
+		A = points[max_i]
+		B = points[max_j]
+		
+		current_points = [A,B]
+		for i in range(4):
+			max_v = min(eucl(points[0, 1:-1], p[1:-1]) for p in current_points)
+			max_p = points[0]
+			for j in range(1,len(points)):
+				v = min(eucl(points[j, 1:-1], p[1:-1]) for p in current_points)
+				if v>max_v:
+					max_v = v
+					max_p = points[j]
+			current_points.append(max_p)
+		print(current_points[0])
+		print(current_points[1])
+		self.get_profile(F,current_points[0],current_points[1])
+		
+
+
+
 	def __calculate_const(self, X, type = 1, cluster_id=None, subcluster_id=None):
 		#
 		matrix = []
@@ -419,8 +497,9 @@ class Const(object):
 		#Вычисляем начальное значение a
 		mean_distance_matrix = X_percent_matrix[:,2].mean()
 		started_a = self.config['consts']['const'] * mean_distance_matrix
-
-		if type == 1:#В первом варианте высчитываем расстояния по 1-му варианту в документе
+		if type == 0:
+			max_a = started_a
+		elif type == 1:#В первом варианте высчитываем расстояния по 1-му варианту в документе
 			max_a = self.__calculate_weights_by_max(X_percent_matrix, X, started_a)
 		elif type == 2:#Во втором варианте высчитываем расстояния по 2-му варианту в документе
 			max_a = self.__calculate_weights_by_Y(X_percent_matrix, X, started_a)
@@ -429,10 +508,9 @@ class Const(object):
 		elif type == 4:#В третьем варианте высчитываем расстояния по 3-му варианту в документе
 			max_a = self.__calculate_weights_by_integral_Y_direct(X_percent_matrix, X, started_a)
 		#На выходе получаем 2 значения (коэффициент a, и среднее значение весов)
-		self.config['consts']['a'] = float(np.round(max_a, self.config['consts']['round_const']))
 		return max_a
 
-	def calculate_a(self, df, type_of_optimization=2):
+	def calculate_a(self, df, type_of_optimization=2, max_a=None):
 		'''
 		Method for calcualte_a and change consts with a
 		args:
@@ -440,37 +518,51 @@ class Const(object):
 		type_of_optimization - type of optimization (type1 - using max; type2 - using threshold) default = type2
 		'''
 		text = ''
-		if self.status == True:
-			text += 'You are calculate consts yet. Please, reload const from default settings\n'
-			return text
+		if max_a is None:
+			if self.status == True:
+				text += 'You are calculate consts yet. Please, reload const from default settings\n'
+				return text
 
-		cluster_id = None
-		subcluster_id = None
-		if 'cluster_id' in df.columns:
-			cluster_id = {item[0]:item[1] for item in df[['id','cluster_id']].values}
-			
-		if 'subcluster_id' in df.columns:
-			subcluster_id = {item[0]:item[1] for item in df[['id','subcluster_id']].values}
+			cluster_id = None
+			subcluster_id = None
+			if 'cluster_id' in df.columns:
+				cluster_id = {item[0]:item[1] for item in df[['id','cluster_id']].values}
+				
+			if 'subcluster_id' in df.columns:
+				subcluster_id = {item[0]:item[1] for item in df[['id','subcluster_id']].values}
 
-		need_names = [n for n in df.columns if n not in self.nameignore] 
-		X = df[need_names].values#приводим их np.array [id, X1, X2]
-		if type_of_optimization==1:
-			max_a = self.__calculate_const(X, 1, cluster_id, subcluster_id)
-		elif type_of_optimization==2:
-			max_a = self.__calculate_const(X, 2, cluster_id, subcluster_id)
-		elif type_of_optimization==3:
-			max_a = self.__calculate_const(X, 3, cluster_id, subcluster_id)
-		elif type_of_optimization==4:
-			max_a = self.__calculate_const(X, 4, cluster_id, subcluster_id)
+			need_names = [n for n in df.columns if n not in self.nameignore] 
+			X = df[need_names].values#приводим их np.array [id, X1, X2]
+			if type_of_optimization==0:
+				max_a = self.__calculate_const(X, 0, cluster_id, subcluster_id)
+			elif type_of_optimization==1:
+				max_a = self.__calculate_const(X, 1, cluster_id, subcluster_id)
+			elif type_of_optimization==2:
+				max_a = self.__calculate_const(X, 2, cluster_id, subcluster_id)
+			elif type_of_optimization==3:
+				max_a = self.__calculate_const(X, 3, cluster_id, subcluster_id)
+			elif type_of_optimization==4:
+				max_a = self.__calculate_const(X, 4, cluster_id, subcluster_id)
+			else:
+				print('Not implemented')
 		else:
-			print('Not implemented')
+			text += 'Calculation consts with started a\n'
 		#Изменяем необходимые константы
+		self.config['consts']['a'] = float(np.round(max_a, self.config['consts']['round_const']))
+
 		self.config['isolated_cluster']['min_len'] = \
 			float(np.round(self.config['isolated_cluster']['min_len'] * max_a, self.config['consts']['round_const']))
 
 		self.config['knots']['stop_const'] = \
 			float(np.round(self.config['knots']['stop_const'] * max_a, self.config['consts']['round_const']))
 
+		# need_names = [n for n in df.columns if n not in self.nameignore] 
+		# self.add_Fcolumn(df, force=True)
+
+		# X = df[need_names].values#приводим их np.array [id, X1, X2]
+		# F = df["F"].values
+
+		# self.calculate_dif(X, F)
 		value = 1./((max_a * self.config['conturs']['min_diff'][0])**2\
 			+ max_a * self.config['conturs']['min_diff'][1])
 		self.config['conturs']['min_diff'] = float(np.round(value, self.config['consts']['round_const']))

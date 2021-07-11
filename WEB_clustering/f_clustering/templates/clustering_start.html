@@ -34,6 +34,13 @@
   	<div class="container">
 
       <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
+      <hr/>
+      
+      <p><a href="{% url 'download_data' data.id %}">Скачать данные</a></p>
+      <hr/>
+
+      <p><a href="{% url 'download_settings' data.id %}">Скачать константы</a></p>
+      <hr/>
 
       <form action="{% url 'f_statistic' data.id %}" method="post" id="statistic">
           {% csrf_token %}
