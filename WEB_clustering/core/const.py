@@ -376,15 +376,15 @@ class Const(object):
 		#Функция рассчета профиля F - матрица формата ['id','x1',...,'xn','F'], p1, p2 - точки формата ['id','x1',...,'xn','F']
 
 		# if np.linalg.norm(np.array(p1[1:-1]) - np.array(p2[1:-1]))/self.cluster_config['divider'] <= self.contur_config['min_diff']:
-		if np.linalg.norm(np.array(p1[1:]) - np.array(p2[1:])) <= self.config['isolated_cluster']['min_len']:
+		if np.linalg.norm(np.array(p1[1:-1]) - np.array(p2[1:-1])) <= self.config['isolated_cluster']['min_len']:
 			return None
 		else:
 			div_num = 0
-			segment_len = np.linalg.norm( np.array(p1[1:]) - np.array(p2[1:]))
+			segment_len = np.linalg.norm( np.array(p1[1:-1]) - np.array(p2[1:-1]))
 			while (div_num < self.config['isolated_cluster']['max_div_num']-1) and (segment_len > self.config['isolated_cluster']['min_len']):
 				div_num+= 1
 				num_of_segments = (self.config['isolated_cluster']['divider']+1)*div_num + self.config['isolated_cluster']['divider']
-				segment_len = np.linalg.norm(np.array(p1[1:]) - np.array(p2[1:]))/num_of_segments
+				segment_len = np.linalg.norm(np.array(p1[1:-1]) - np.array(p2[1:-1]))/num_of_segments
 
 			if div_num == 0:
 				return None
@@ -392,7 +392,7 @@ class Const(object):
 			points = []
 			for i in range(num_of_segments):
 				x = [-1.]
-				for j in range(1, len(p1)):
+				for j in range(1, len(p1)-1):
 					x.append((p1[j] + p2[j]*(i+1)/(num_of_segments-i))/(1+(i+1)/(num_of_segments-i)))
 				points.append(np.array(x))
 
@@ -400,26 +400,27 @@ class Const(object):
 			for point in points:
 				pp = [p for p in point[1:]] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]
 				Fs.append(pp)
-			print(Fs)
-				
-			Fs = sorted(Fs, key = lambda S: S[-1], reverse = False)
+			F_all = [p1.tolist()[1:]] + Fs + [p2.tolist()[1:]]
+			F_all = np.stack(F_all)
+			F_diff = []
+			for i in range(1,F_all.shape[0]-1):
+				max_l = F_all[:i,-1].max()
+				max_r = F_all[i+1:,-1].max()
+				max_c = min(max_l, max_r)
+				F_diff.append(max_c-F_all[i,-1])
+			F_diff = max(F_diff)
+			return F_diff
 
-			Fmin = np.min([F[-1] for F in Fs])
-			Fstar = p1[-1] if  p1[-1] < p2[-1] else p2[-1]
-
-			if Fstar - Fmin >= self.cluster_config['min_dif']:
-				return 'different', Fstar - Fmin
-			else:
-				return 'common', Fstar - Fmin
-
-	def calculate_dif(self, points, F):
+	def calculate_dif(self, F):
 
 		def eucl(p1,p2):
 			return sum((p1 - p2)**2)
 
-		points = np.concatenate([points,F.reshape((-1,1))],axis=1)
-		X = pairwise_distances(points[:,1:-1])
-
+		F = sorted(F, key=lambda x: x[-1], reverse=True)
+		F = np.stack(F)
+		lenght = max(int(np.round(F.shape[0]*(self.config['consts']['U']/100), 0)), 1)
+		F = F[:lenght]
+		X = pairwise_distances(F[:,1:-1])# U
 		max_i = 0
 		max_j = 0
 		max_v = 0
@@ -430,25 +431,57 @@ class Const(object):
 					max_j = j
 					max_v = X[i,j]
 
-		A = points[max_i]
-		B = points[max_j]
-		
+		A = F[max_i]
+		B = F[max_j]
 		current_points = [A,B]
-		for i in range(4):
-			max_v = min(eucl(points[0, 1:-1], p[1:-1]) for p in current_points)
-			max_p = points[0]
-			for j in range(1,len(points)):
-				v = min(eucl(points[j, 1:-1], p[1:-1]) for p in current_points)
+		dim = F.shape[1]-2
+		N = 2 + int(self.config['consts']['w'])*(dim-1)
+		for i in range(min(N-2,F.shape[0])):# 2+int(self.config['conturs']['n_points_for_dif'])*(A.shape[0]-2+1)
+			max_v = min(eucl(F[0, 1:-1], p[1:-1]) for p in current_points)
+			max_p = F[0]
+			for j in range(1,len(F)):
+				v = min(eucl(F[j, 1:-1], p[1:-1]) for p in current_points)
 				if v>max_v:
 					max_v = v
-					max_p = points[j]
+					max_p = F[j]
 			current_points.append(max_p)
-		print(current_points[0])
-		print(current_points[1])
-		self.get_profile(F,current_points[0],current_points[1])
-		
+		print(current_points)
+		F_dif = []
+		done = set()
+		for i in range(len(current_points)):
+			for j in range(len(current_points)):
+				if i==j:
+					continue
+				name = str(i)+'_'+str(j)
+				if name in done:
+					continue
+				else:
+					F_dif.append(self.get_profile(F,current_points[i],current_points[j]))
+					done.add(name)
+					done.add(name[::-1])
+		print(F_dif)
+		F_dif_good = []
+		for item in F_dif:
+			if item is not None and item>0:
+				F_dif_good.append(item)
+		if len(F_dif_good) == 0:
+			return None, None
+		if len(F_dif_good)==1 and F_dif_good[0]>0:
+			F_dif_max = F_dif_good[0]
+			F_diff_max = F_dif_max * 0.2
+			return F_dif_max, F_diff_max
 
+		F_dif_mean = sum(F_dif_good)/len(F_dif_good)
+		F_dif_max = -9999999
+		F_dif_good.sort(reverse=True)
 
+		for i in range(1,len(F_dif_good)):
+			F_dif_mean_i = i*(sum(F_dif_good[:i])/len(F_dif_good[:i])-F_dif_mean)
+			if F_dif_mean_i>F_dif_max:
+				F_dif_max = F_dif_mean_i
+		F_dif_max = F_dif_max * self.config['conturs']['min_diff']
+		F_diff_max = F_dif_max * 0.2
+		return F_dif_max, F_diff_max
 
 	def __calculate_const(self, X, type = 1, cluster_id=None, subcluster_id=None):
 		#
@@ -556,20 +589,25 @@ class Const(object):
 		self.config['knots']['stop_const'] = \
 			float(np.round(self.config['knots']['stop_const'] * max_a, self.config['consts']['round_const']))
 
-		# need_names = [n for n in df.columns if n not in self.nameignore] 
-		# self.add_Fcolumn(df, force=True)
+		need_names = [n for n in df.columns if n not in self.nameignore] + ['F']
+		self.add_Fcolumn(df, force=True)
 
-		# X = df[need_names].values#приводим их np.array [id, X1, X2]
-		# F = df["F"].values
+		X = df[need_names].values#приводим их np.array [id, X1, X2]
 
-		# self.calculate_dif(X, F)
-		value = 1./((max_a * self.config['conturs']['min_diff'][0])**2\
-			+ max_a * self.config['conturs']['min_diff'][1])
-		self.config['conturs']['min_diff'] = float(np.round(value, self.config['consts']['round_const']))
+		min_dif, min_diff = self.calculate_dif(X)
+		if min_dif is None or min_dif is None:
+			text += 'Вероятно, Ваши данные распределены монолитно и не распадаются на кластеры. Если кластеризации все-таки требуется добиться, — попробуйте вручную уменьшить величину «а» и повторить процесс\n'
+			self.config['conturs']['min_diff'] = float(round(1.1, self.config['consts']['round_const']))
+			self.config['isolated_cluster']['min_dif'] = float(round(1.1, self.config['consts']['round_const']))
+		self.config['conturs']['min_diff'] = float(np.round(min_diff, self.config['consts']['round_const']))
+		self.config['isolated_cluster']['min_dif'] = float(np.round(min_dif, self.config['consts']['round_const']))
+		# value = 1./((max_a * self.config['conturs']['min_diff'][0])**2\
+		# 	+ max_a * self.config['conturs']['min_diff'][1])
+		# self.config['conturs']['min_diff'] = float(np.round(value, self.config['consts']['round_const']))
 
-		value = 1./((max_a * self.config['isolated_cluster']['min_dif'][0])**2\
-			+ max_a * self.config['isolated_cluster']['min_dif'][1])
-		self.config['isolated_cluster']['min_dif'] = float(np.round(value, self.config['consts']['round_const']))
-		self.status = True
+		# value = 1./((max_a * self.config['isolated_cluster']['min_dif'][0])**2\
+		# 	+ max_a * self.config['isolated_cluster']['min_dif'][1])
+		# self.config['isolated_cluster']['min_dif'] = float(np.round(value, self.config['consts']['round_const']))
+		# self.status = True
 		text += 'Everything good :)\n'
 		return text

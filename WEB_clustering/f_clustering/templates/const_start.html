@@ -50,12 +50,12 @@
 
 
         {% for col in columns %}
-          <p>
-            <input name="need_coords" class="form-check-input" type="checkbox" value="{{col.0}}" id="flexCheckDefault" {% if col.1 %} checked {% endif %}>
-            <label class="form-check-label" for="flexCheckDefault">
+          <div class="form-check">
+            <input title='Удалить данную координату в процессе вычислений' name="need_coords" class="form-check-input" type="checkbox" value="{{col.0}}" id="flexCheckDefault" {% if col.1 %} checked {% endif %}>
+            <label title='Удалить данную координату в процессе вычислений' class="form-check-label" for="flexCheckDefault">
               {{col.0}}
             </label>
-          </p> 
+          </div>
         {% endfor %}
 
 
@@ -70,9 +70,9 @@
           <input name="max_depth" type="number" step="any" value={{settings.consts.max_depth}}></p>
           <p title='Процент расстоний, который учитывается'>percent_X
           <input name="percent_X" type="number" step="any" value={{settings.consts.percent_X}}></p>
-          <p title='Процент расстоний, который учитывается'>percent_Y
+          <p title='Процент точек с максимальными Y'>percent_Y
           <input name="percent_Y" type="number" step="any" value={{settings.consts.percent_Y}}></p>
-          <p title='Процент F, который учитывается для 1-го способа'>percent_for_norms
+          <p title='Процент минимальных расстояний при нормировке'>percent_for_norms
           <input name="percent_for_norms" type="number" step="any" value={{settings.consts.percent_for_norms}}></p>
           <p title='Процент нулевых расстояний, больше которого не будет браться'>percent_of_zeros
           <input name="percent_of_zeros" type="number" step="any" value={{settings.consts.percent_of_zeros}}></p>
@@ -82,6 +82,10 @@
           <input name="threshold" type="number" step="any" value={{settings.consts.threshold}}></p>
           <p title='Количество шагов вверх по степени для 3-го способа'>up_steps
           <input name="up_steps" type="number" step="any" value={{settings.consts.up_steps}}></p>
+          <p title='Процент точек с максимальным F для рассчета dif'>U
+          <input name="U" type="number" step="any" value={{settings.consts.U}} min=10></p>
+          <p title='Количество точек для подсчета min dif и min diff'>w
+          <input name="w" type="number" step="any" value={{settings.consts.w}}></p>
           {% if settings.consts.a %}
             <p style="color:red" title='Итоговое а'>a
             <input name="a" type="number" step="any" value={{settings.consts.a}}></p>
@@ -91,39 +95,44 @@
             <input name="started_a" type="number" step="any"></p>
           {% endif %}
         <h3>conturs</h3>
-          <p title='?'>min_points
+          <p title='"min_points"   - это мы когда контуры рассчитываем,  идем  вниз по направлению снижения Ф
+и данная константа  отвечает за шаг  - т..е. каждый раз смещаемся на 30 точек и рассчитываем  контур  от  contour_points  =50ти точек'>min_points
           <input name="min_points" type="number" step="any" value={{settings.conturs.min_points}}></p>
           <p title='?'>contour_points
           <input name="contour_points" type="number" step="any" value={{settings.conturs.contour_points}}></p>
-          <p title='?'>num_of_lenghts
+          <p title='это среднее расстояние (средний вес ребра) полученное от минимальных-прилегающих для  каждой из  contour_points'>num_of_lenghts
           <input name="num_of_lenghts" type="number" step="any" value={{settings.conturs.num_of_lenghts}}></p>
           
           {% if settings.conturs.min_diff|length > 0 %}
-            <p title='?'>min_diff</p>
+            <p title=' это дополнительный критерий нахождения уровней на которых контуры рассчитываем  - с одной стороны , мы шагаем через каждые х штук min_points, 
+а с другой имеем условие, что  разность Ф  между соседними контурами не должна быть выше min_diff  -т.е, даже если  точек и меньше,
+чем =min_points  мы в таких случаях все равно контур должны рассчитать.'>min_diff</p>
             <p><input name="min_diff_0" type="number" step="any" value={{settings.conturs.min_diff.0}}></p>
             <p><input name="min_diff_1" type="number" step="any" value={{settings.conturs.min_diff.1}}></p>
           {% else %}
-            <p title='?'>min_diff
+            <p title=' это дополнительный критерий нахождения уровней на которых контуры рассчитываем  - с одной стороны , мы шагаем через каждые х штук min_points, 
+а с другой имеем условие, что  разность Ф  между соседними контурами не должна быть выше min_diff  -т.е, даже если  точек и меньше,
+чем =min_points  мы в таких случаях все равно контур должны рассчитать.'>min_diff
             <input name="min_diff" type="number" step="any" value={{settings.conturs.min_diff}}></p>
           {% endif %}
 
         <h3>isolated_cluster</h3>
-          <p title='?'>constU1
+          <p title='коэф-т на который умножаем контур и если расстояния между двумя точками меньше чем контур*constU1  то Профиль не проводим'>constU1
           <input name="constU1" type="number" step="any" value={{settings.isolated_cluster.constU1}}></p>
           <p title='Минимальная длина между 2 точками для рассчета профилей'>min_len
           <input name="min_len" type="number" step="any" value={{settings.isolated_cluster.min_len}}></p>
-          <p title='?'>divider
+          <p title='Это - на сколько делений каждый раз разбиваем отрезок Профиля, чтобы точки расчета Ф получить'>divider
           <input name="divider" type="number" step="any" value={{settings.isolated_cluster.divider}}></p>
           <p title='Порог для мерджинга'>merge_threshold
           <input name="merge_threshold" type="number" step="any" value={{settings.isolated_cluster.merge_threshold}}></p>
           <p title='Максимальное количество делейний при расчете профилей (контрольные уровни)'>max_div_num
           <input name="max_div_num" type="number" step="any" value={{settings.isolated_cluster.max_div_num}}></p>
           {% if settings.isolated_cluster.min_dif|length > 0 %}
-            <p title='?'>min_dif</p>
+            <p title='максимально допустимая просадка в профиле'>min_dif</p>
             <p><input name="min_dif_0" type="number" step="any" value={{settings.isolated_cluster.min_dif.0}}></p>
             <p><input name="min_dif_1" type="number" step="any" value={{settings.isolated_cluster.min_dif.1}}></p>
           {% else %}
-            <p title='?'>min_dif
+            <p title='максимально допустимая просадка в профиле'>min_dif
             <input name="min_dif" type="number" step="any" value={{settings.isolated_cluster.min_dif}}></p>
           {% endif %}
 

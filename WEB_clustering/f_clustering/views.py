@@ -1,4 +1,6 @@
 import os 
+import io
+import pandas as pd
 
 from .models import Projects
 from .forms import AuthUserForm, RegisterUserForm, ProjectsForm
@@ -93,24 +95,24 @@ def table(request, pk):
 	return HttpResponse(geeks_object)
 
 def download_data(request, pk):
-    data = Projects.objects.get(pk=pk)
-    file_path = './df'+data.attach.url
-    if os.path.exists(file_path):
-        with open(file_path, 'rb') as fh:
-            response = HttpResponse(fh.read(), content_type="application/liquid")
-            response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
-            return response
-    raise Http404
+	data = Projects.objects.get(pk=pk)
+	file_path = './df'+data.attach.url
+	if os.path.exists(file_path):
+		with open(file_path, 'rb') as fh:
+			response = HttpResponse(fh.read(), content_type="application/liquid")
+			response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
+			return response
+	raise Http404
 
 def download_settings(request, pk):
-    data = Projects.objects.get(pk=pk)
-    file_path = './settings/'+data.settings.url
-    if os.path.exists(file_path):
-        with open(file_path, 'rb') as fh:
-            response = HttpResponse(fh.read(), content_type="application/liquid")
-            response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
-            return response
-    raise Http404
+	data = Projects.objects.get(pk=pk)
+	file_path = './settings/'+data.settings.url
+	if os.path.exists(file_path):
+		with open(file_path, 'rb') as fh:
+			response = HttpResponse(fh.read(), content_type="application/liquid")
+			response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
+			return response
+	raise Http404
 
 def split_data(request, pk):
 	data = Projects.objects.get(pk=pk)
@@ -227,7 +229,7 @@ def const_start(request,pk):
 						calulate_with_started_a = float(request.POST[key])
 				if key in const.config[domen]:
 					if key in ['min_points', 'contour_points', 'num_of_lenghts', 'divider', 'max_div_num', 'round_const',\
-					'down_steps', 'up_steps', 'max_depth']:
+					'down_steps', 'up_steps', 'max_depth', 'n_points_for_dif']:
 						const.config[domen][key] = int(round(float(request.POST[key]),0))
 					else:
 						const.config[domen][key] = float(request.POST[key])
@@ -316,7 +318,7 @@ def clustering_start(request,pk):
 					const.config['conturs']['min_diff'][1] = float(request.POST[key])
 				if key in const.config[domen]:
 					if key in ['min_points', 'contour_points', 'num_of_lenghts', 'divider', 'max_div_num', 'round_const',\
-					'down_steps', 'up_steps', 'max_depth']:
+					'down_steps', 'up_steps', 'max_depth', 'w', 'U']:
 						const.config[domen][key] = int(round(float(request.POST[key]),0))
 					else:
 						const.config[domen][key] = float(request.POST[key])
@@ -339,6 +341,7 @@ def compute_clustering(request, pk, type_c):
 	elif type_c == 3:
 		Merger = IMerger(const.config)
 		Merger.mergeClusters(df)
+		data.comments += 'Merging done\n'
 		data.comments += 'finded '+str(len(set(df['cluster_id'])))+' clusters\n'
 	elif type_c == 4:
 		sub = Subclusters(const.config)
@@ -394,7 +397,14 @@ def classification_start(request, pk):
 
 def classification(request, pk):
 	if request.method =='POST':
-		pk_test = int(request.POST.get('project', None))
+		pk_test = request.POST.get('project', None)
+		if pk_test is None:
+			data = Projects.objects.get(pk=pk)
+			data.comments += 'No data for classification\n'
+			data.save()
+			return redirect(reverse('classification_start', args=(pk, )))
+
+		pk_test = int(pk_test)
 
 		data = Projects.objects.get(pk=pk)
 		const = Const('./settings/'+data.settings.url)
@@ -408,10 +418,20 @@ def classification(request, pk):
 		df_test, text = classifier.predict(df_train, df_test)
 		data.comments += text
 		data.save()
-		geeks_object = df_test.to_html()
 
-		return HttpResponse(geeks_object)
-
+		with io.BytesIO() as b:
+			# Use the StringIO object as the filehandle.
+			writer = pd.ExcelWriter(b, engine='xlsxwriter')
+			df_test.to_excel(writer, sheet_name='Sheet1')
+			writer.save()
+			# Set up the Http response.
+			filename = 'result.xlsx'
+			response = HttpResponse(
+				b.getvalue(),
+				content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+			)
+			response['Content-Disposition'] = 'attachment; filename=%s' % filename
+			return response
 
 def del_clustering(request, pk, type_c):
 	data = Projects.objects.get(pk=pk)

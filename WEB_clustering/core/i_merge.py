@@ -128,4 +128,11 @@ class IMerger():
 
 		while F_matrix.min()<self.config['isolated_cluster']['merge_threshold']:
 			self.__merge(F_matrix, num_clusters, df)
-
+		print(df['cluster_id'])
+		indexes = sorted(list(set(df['cluster_id'].values)))
+		index_map = {index:k for k,index in enumerate(indexes)}
+		print(index_map)
+		new_indexes = []
+		for inds in df['cluster_id'].values:
+			new_indexes.append(index_map[inds])
+		df['cluster_id'] = new_indexes
