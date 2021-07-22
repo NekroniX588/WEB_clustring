@@ -160,7 +160,16 @@ def f_statistic(request, pk):
 	df = reader.read('./df/'+data.attach.url)
 	const = Const('./settings/'+data.settings.url)
 	const.add_Fcolumn(df)
-	text = const.statistic(df, num_of_intervals = int(request.POST['num_interval']))
+	text = const.f_statistic(df, num_of_intervals = int(request.POST['num_interval']))
+	data.comments += text
+	data.save()
+	return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+def distance_statistic(request, pk):
+	data = Projects.objects.get(pk=pk)
+	df = reader.read('./df/'+data.attach.url)
+	const = Const('./settings/'+data.settings.url)
+	text = const.distance_statistic(df, num_of_intervals = int(request.POST['num_interval']))
 	data.comments += text
 	data.save()
 	return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
@@ -235,7 +244,10 @@ def const_start(request,pk):
 						const.config[domen][key] = float(request.POST[key])
 		const.save_consts('./settings/'+data.settings.url)
 		if calulate_with_started_a is not None:
-			text = const.calculate_a(None, 3, calulate_with_started_a)
+			df = reader.read('./df/'+data.attach.url)
+			const.norm(df)
+			reader.write(df, './df/'+data.attach.url)
+			text = const.calculate_a(df, 3, calulate_with_started_a)
 			data.comments += text
 			data.save()
 			const.save_consts('./settings/'+data.settings.url)
@@ -248,6 +260,7 @@ def calculate_a(request, pk, type_optimization):
 
 	const = Const('./settings/'+data.settings.url)
 	const.norm(df)
+	reader.write(df, './df/'+data.attach.url)
 	text = const.calculate_a(df, type_optimization)
 	data.comments += text
 	data.save()

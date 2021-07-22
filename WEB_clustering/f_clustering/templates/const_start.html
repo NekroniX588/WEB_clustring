@@ -32,7 +32,6 @@
 
 
   	<div class="container">
-
       <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
       <hr/>
 
@@ -45,10 +44,19 @@
       <p><a href="{% url 'const_reload' data.id %}">Обнулисть костанты</a></p>
       <hr/>
 
+      <form action="{% url 'distance_statistic' data.id %}" method="post" id="statistic">
+          {% csrf_token %}
+          <p>Количество интервалов</p>
+          <p><input name="num_interval" type="number" min=2 max={{rows}} step=1 value=10></p>
+        </form>
+      <p title='Доступно после вычисления а'><button form="statistic" type="submit" class="btn btn-primary mt-1" {% if not settings.norms %} disabled {% endif %}>Статистика по расстояниям</button></p>
+      <hr/>
       <form action="{% url 'const_start' data.id %}" method="post" id="save">
         {% csrf_token %}
 
-
+        <div class="row">
+        <div class="col">
+        <h4>Удалить координаты из вычислений</h4>
         {% for col in columns %}
           <div class="form-check">
             <input title='Удалить данную координату в процессе вычислений' name="need_coords" class="form-check-input" type="checkbox" value="{{col.0}}" id="flexCheckDefault" {% if col.1 %} checked {% endif %}>
@@ -57,8 +65,21 @@
             </label>
           </div>
         {% endfor %}
+        </div>
+        <div class="col">
+        {% if settings.norms %}
+          <h3>norms</h3>
+            {% for norm in settings.norms %}
+              <p>{{norm}}
+              <input name={{norm}} type="number" step="any" value={{ settings.norms|get_item:norm }}></p>
+            {% endfor %}
+        {% endif %}
+        </div>
 
-
+      </div>
+      <hr/>
+    <div class="row">
+      <div class="col">
         <h3>Consts</h3>
           <p title='Шаг по Y (только 2 способ)'>Y_step
           <input name="Y_step" type="number" step="any" value={{settings.consts.Y_step}}></p>
@@ -94,6 +115,8 @@
             <p style="color:red" title='Стартовое а'>started a
             <input name="started_a" type="number" step="any"></p>
           {% endif %}
+        </div>
+        <div class="col">
         <h3>conturs</h3>
           <p title='"min_points"   - это мы когда контуры рассчитываем,  идем  вниз по направлению снижения Ф
 и данная константа  отвечает за шаг  - т..е. каждый раз смещаемся на 30 точек и рассчитываем  контур  от  contour_points  =50ти точек'>min_points
@@ -115,7 +138,8 @@
 чем =min_points  мы в таких случаях все равно контур должны рассчитать.'>min_diff
             <input name="min_diff" type="number" step="any" value={{settings.conturs.min_diff}}></p>
           {% endif %}
-
+        
+      
         <h3>isolated_cluster</h3>
           <p title='коэф-т на который умножаем контур и если расстояния между двумя точками меньше чем контур*constU1  то Профиль не проводим'>constU1
           <input name="constU1" type="number" step="any" value={{settings.isolated_cluster.constU1}}></p>
@@ -135,14 +159,8 @@
             <p title='максимально допустимая просадка в профиле'>min_dif
             <input name="min_dif" type="number" step="any" value={{settings.isolated_cluster.min_dif}}></p>
           {% endif %}
-
-        {% if settings.norms %}
-          <h3>norms</h3>
-            {% for norm in settings.norms %}
-              <p>{{norm}}
-              <input name={{norm}} type="number" step="any" value={{ settings.norms|get_item:norm }}></p>
-            {% endfor %}
-        {% endif %}
+        </div>
+      </div>
       </form>
 
       <p><button form="save" type="submit" class="btn btn-primary mt-4">Сохранить</button></p>
@@ -153,10 +171,9 @@
       <p><a href="{% url 'calculate_a' data.id 3 %}">Третий способ</a></p>
       <p><a href="{% url 'calculate_a' data.id 4 %}">Четвертый способ</a></p>
 
-      <textarea name="text" cols="40" rows="15">{{data.comments}}</textarea>
+      <textarea name="text" class="form-control" id="exampleFormControlTextarea1" rows="10">{{data.comments}}</textarea>
       {% if settings.consts.a %}
         <a href="{% url 'clustering_start' data.id %}">Далее</a>
       {% endif %}
-
-  	</div>
+	</div>
   {% endblock %}

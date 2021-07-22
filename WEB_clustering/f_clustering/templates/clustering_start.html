@@ -53,43 +53,48 @@
       <form action="{% url 'clustering_start' data.id %}" method="post" id="save">
         {% csrf_token %}
         <h3>Consts</h3>
-          <p>Y_step {{settings.consts.Y_step}} </p>
-          <p>const {{settings.consts.const}}</p>
-          <p>down_steps {{settings.consts.down_steps}}</p>
-          <p>max_depth {{settings.consts.max_depth}}</p>
-          <p>percent_X {{settings.consts.percent_X}}</p>
-          <p>percent_Y {{settings.consts.percent_Y}}</p>
-          <p>percent_for_norms {{settings.consts.percent_for_norms}}</p>
-          <p>percent_of_zeros {{settings.consts.percent_of_zeros}}</p>
-          <p>round_const {{settings.consts.round_const}}</p>
-          <p>threshold {{settings.consts.threshold}}</p>
-          <p>up_steps {{settings.consts.up_steps}}</p>
+          <p title='Шаг по Y (только 2 способ)'>Y_step {{settings.consts.Y_step}} </p>
+          <p title='Начальная константа при подборе а'>const {{settings.consts.const}}</p>
+          <p title='Количество шагов вниз по степени для 3-го способа'>down_steps {{settings.consts.down_steps}}</p>
+          <p title='Максимальное количество шагов для 4-го способа'>max_depth {{settings.consts.max_depth}}</p>
+          <p title='Процент расстоний, который учитывается'>percent_X {{settings.consts.percent_X}}</p>
+          <p title='Процент точек с максимальными Y'>percent_Y {{settings.consts.percent_Y}}</p>
+          <p title='Процент минимальных расстояний при нормировке'>percent_for_norms {{settings.consts.percent_for_norms}}</p>
+          <p title='Процент нулевых расстояний, больше которого не будет браться'>percent_of_zeros {{settings.consts.percent_of_zeros}}</p>
+          <p title='Константа округления'>round_const {{settings.consts.round_const}}</p>
+          <p title='Порог для 2-го способа'>threshold {{settings.consts.threshold}}</p>
+          <p title='Количество шагов вверх по степени для 3-го способа'>up_steps {{settings.consts.up_steps}}</p>
+          <p title='Процент точек с максимальным F для рассчета dif'>U {{settings.consts.U}}</p>
+          <p title='Количество точек для подсчета min dif и min diff'>w {{settings.consts.w}}</p>
           {% if settings.consts.a %}
-            <p style="color:red">a {{settings.consts.a}}</p>
+            <p style="color:red"  title='Итоговое а'>a {{settings.consts.a}}</p>
           {% endif %}
         <h3>conturs</h3>
-          <p>min_points
+          <p title='"min_points"   - это мы когда контуры рассчитываем,  идем  вниз по направлению снижения Ф
+и данная константа  отвечает за шаг  - т..е. каждый раз смещаемся на 30 точек и рассчитываем  контур  от  contour_points  =50ти точек'>min_points
           <input name="min_points" type="number" step="any" value={{settings.conturs.min_points}}></p>
-          <p>contour_points
+          <p title='?'>contour_points
           <input name="contour_points" type="number" step="any" value={{settings.conturs.contour_points}}></p>
-          <p>num_of_lenghts
+          <p title='это среднее расстояние (средний вес ребра) полученное от минимальных-прилегающих для  каждой из  contour_points'>num_of_lenghts
           <input name="num_of_lenghts" type="number" step="any" value={{settings.conturs.num_of_lenghts}}></p>
           
-          <p>min_diff
+          <p title=' это дополнительный критерий нахождения уровней на которых контуры рассчитываем  - с одной стороны , мы шагаем через каждые х штук min_points, 
+а с другой имеем условие, что  разность Ф  между соседними контурами не должна быть выше min_diff  -т.е, даже если  точек и меньше,
+чем =min_points  мы в таких случаях все равно контур должны рассчитать.'>min_diff
           <input name="min_diff" type="number" step="any" value={{settings.conturs.min_diff}}></p>
 
         <h3>isolated_cluster</h3>
-          <p>constU1
+          <p title='коэф-т на который умножаем контур и если расстояния между двумя точками меньше чем контур*constU1  то Профиль не проводим'>constU1
           <input name="constU1" type="number" step="any" value={{settings.isolated_cluster.constU1}}></p>
-          <p>min_len
+          <p title='Минимальная длина между 2 точками для рассчета профилей'>min_len
           <input name="min_len" type="number" step="any" value={{settings.isolated_cluster.min_len}}></p>
-          <p>divider
+          <p title='Это - на сколько делений каждый раз разбиваем отрезок Профиля, чтобы точки расчета Ф получить'>divider
           <input name="divider" type="number" step="any" value={{settings.isolated_cluster.divider}}></p>
-          <p>merge_threshold
+          <p title='Порог для мерджинга'>merge_threshold
           <input name="merge_threshold" type="number" step="any" value={{settings.isolated_cluster.merge_threshold}}></p>
-          <p>max_div_num
+          <p title='Максимальное количество делейний при расчете профилей (контрольные уровни)'>max_div_num
           <input name="max_div_num" type="number" step="any" value={{settings.isolated_cluster.max_div_num}}></p>
-          <p>min_dif
+          <p title='максимально допустимая просадка в профиле'>min_dif
           <input name="min_dif" type="number" step="any" value={{settings.isolated_cluster.min_dif}}></p>
 
         {% if settings.norms %}
@@ -120,7 +125,7 @@
         <p><a href="{% url 'del_clustering' data.id 2 %}">Удалить результаты сабкластеризации</a></p>
       {% endif %}
 
-      <textarea name="text" cols="40" rows="15">{{data.comments}}</textarea>
+      <textarea name="text" class="form-control" id="exampleFormControlTextarea1" rows="10">{{data.comments}}</textarea>
       <a href="{% url 'classification_start' data.id %}">Далее</a>
 
   	</div>

@@ -23,6 +23,7 @@ urlpatterns = [
     path('const_reload/<int:pk>', views.const_reload, name='const_reload'),
     path('calculate_a/<int:pk>/<int:type_optimization>', views.calculate_a, name='calculate_a'),
     path('f_statistic/<int:pk>', views.f_statistic, name='f_statistic'),
+    path('distance_statistic/<int:pk>', views.distance_statistic, name='distance_statistic'),
     
     path('clustering_page/<int:pk>', views.clustering_start, name='clustering_start'),
     path('compute_clustering/<int:pk>/<int:type_c>', views.compute_clustering, name='compute_clustering'),

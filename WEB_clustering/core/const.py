@@ -55,10 +55,12 @@ class Const(object):
 		need_names = [n for n in df.columns if n not in self.nameignore + ['id']] 
 		df_for_norm = df[need_names]
 		X, norms = self.__normalize(df_for_norm.values, self.config['consts']['percent_for_norms'])
+		print(X[:10])
 		
 		for i, col in enumerate(df_for_norm.columns[:]):
 			self.config['norms'][col] = float(np.round(norms[i], self.config['consts']['round_const']))
 		df[need_names] = X
+		print(df)
 
 	def get_norms(self):
 		if len(self.config['norms'])==0:
@@ -67,45 +69,56 @@ class Const(object):
 		else:
 			return self.config['norms']
 
-	def statistic(self, df, num_of_intervals=10):
+	def f_statistic(self, df, num_of_intervals=10):
 		text = ''
 		if 'F' in df.columns:
 			text += 'F_max = %.4f, F_min = %.4f \n'%(max(df['F']),min(df['F']))
 			F = df['F'].values
 			F.sort()
-			print(F)
 			start = 0
 			finish = len(F)//num_of_intervals
 			step = len(F)//num_of_intervals
 			for i in range(num_of_intervals-1):
-				print(F[start:finish])
 				text += 'Interval %.d:% 5f \n'%(i,F[start:finish].mean())
 				start = finish
 				finish += step
 			text += 'Interval %.d:% 5f \n'%(i+1,F[start:].mean())
 			text += '*'*20+'\n'
-			need_column = []
-			for col in df.columns:
-				if 'X' in col:
-					need_column.append(col)
-			x = df[need_column].values
-			d = pairwise_distances(x).ravel()
-			d_abs = (d[d==0].shape[0]-df.shape[0])//2
-			d_rel = ((d[d==0].shape[0]-df.shape[0])//2)/((d.shape[0]-df.shape[0])//2)
-			text += 'data contain absolute: %.d \n'%(d_abs)
-			text += 'data contain relation: %.5f \n'%(d_rel)
-			d.sort()
-			start = 0
-			finish = len(d)//num_of_intervals
-			step = len(d)//num_of_intervals
-			for i in range(num_of_intervals-1):
-				text += 'Interval: %.d:% 5f \n'%(i,d[start:finish].mean())
-				start = finish
-				finish += step
-			text += 'Interval: %.d:% 5f \n'%(i+1,d[start:].mean())
-			text += '='*20 + '\n'
 		else:
 			text += 'F not calculated\n'
+		return text
+
+	def distance_statistic(self, df, num_of_intervals=10):
+		text = ''
+		need_column = []
+		for col in df.columns:
+			if 'X' in col:
+				need_column.append(col)
+		x = df[need_column].values
+		D = np.tril(pairwise_distances(x))
+		d = []
+		for i in range(D.shape[0]):
+			for j in range(D.shape[1]):
+				if i>j:
+					d.append(D[i,j])
+		d = np.array(d)
+		# d_abs = (d[d==0].shape[0]-df.shape[0])//2
+		# d_rel = ((d[d==0].shape[0]-df.shape[0])//2)/((d.shape[0]-df.shape[0])//2)
+		d_abs = d[d==0].shape[0]
+		d_rel = d[d==0].shape[0]/d.shape[0]
+		text += 'data contain absolute: %.d \n'%(d_abs)
+		text += 'data contain relation: %.5f \n'%(d_rel)
+		d.sort()
+		start = 0
+		finish = len(d)//num_of_intervals
+		print(d)
+		step = len(d)//num_of_intervals
+		for i in range(num_of_intervals-1):
+			text += 'Interval: %.d:% 5f \n'%(i,d[start:finish].mean())
+			start = finish
+			finish += step
+		text += 'Interval: %.d:% 5f \n'%(i+1,d[start:].mean())
+		text += '='*20 + '\n'
 		return text
 
 
@@ -487,14 +500,17 @@ class Const(object):
 		#
 		matrix = []
 		map_index = {k:index for k,index in enumerate(X[:,0])}
+		print(X)
+		print('X',X.shape)
 		distance_matrix = np.tril(pairwise_distances(X[:,1:]))#Вычисляем матрицу расстояний [len(id), len(id)]
+		print(distance_matrix.shape)
 		#[0,   0,   0]
 		#[1.3, 0,   0] - пример
 		#[1.8, 5.2, 0]
 		#Цикл для составления матрицы соответствия [id вершины 1, id вершины 2, расстояние]
 		for i in range(distance_matrix.shape[0]):
 			for j in range(distance_matrix.shape[1]):
-				if distance_matrix[i,j]!=0:
+				if i>j:
 					row = [map_index[i], map_index[j], distance_matrix[i,j]]
 					if cluster_id is not None and subcluster_id is not None:
 						if cluster_id[map_index[i]]==cluster_id[map_index[j]] and subcluster_id[map_index[i]]==subcluster_id[map_index[j]]:
@@ -513,7 +529,7 @@ class Const(object):
 		print(len(matrix))
 		matrix.sort(key=lambda x: x[2])
 		distance_matrix = np.array(matrix) #Переводим матрицу в np.array
-
+		print('distance_matrix',distance_matrix.shape)
 		#Выбираем X% матрицы расстояний
 		lenght = max(int(np.round(distance_matrix.shape[0]*(self.config['consts']['percent_X']/100), 0)), 1)
 		start = 0
@@ -526,9 +542,11 @@ class Const(object):
 			finish += 1
 			time_d = distance_matrix[start:finish]
 		X_percent_matrix = distance_matrix[start:finish]
-
+		print('X_percent_matrix',X_percent_matrix.shape)
 		#Вычисляем начальное значение a
+		print(X_percent_matrix)
 		mean_distance_matrix = X_percent_matrix[:,2].mean()
+		print(mean_distance_matrix)
 		started_a = self.config['consts']['const'] * mean_distance_matrix
 		if type == 0:
 			max_a = started_a
