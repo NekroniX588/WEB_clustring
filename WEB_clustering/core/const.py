@@ -1,3 +1,6 @@
+import logging
+import datetime
+
 import yaml
 from tqdm import tqdm
 import numpy as np
@@ -385,10 +388,16 @@ class Const(object):
 
 		return current_a
 
-	def get_profile(self, F, p1, p2):
+	def get_profile(self, F, p1, p2, logging_save = False):
 		#Функция рассчета профиля F - матрица формата ['id','x1',...,'xn','F'], p1, p2 - точки формата ['id','x1',...,'xn','F']
 
 		# if np.linalg.norm(np.array(p1[1:-1]) - np.array(p2[1:-1]))/self.cluster_config['divider'] <= self.contur_config['min_diff']:
+		if logging_save:
+			log_message = 'Профиль для пары точек'
+			logging.debug(log_message)
+			logging.debug(str(p1))
+			logging.debug(str(p2))
+
 		if np.linalg.norm(np.array(p1[1:-1]) - np.array(p2[1:-1])) <= self.config['isolated_cluster']['min_len']:
 			return None
 		else:
@@ -415,6 +424,13 @@ class Const(object):
 				Fs.append(pp)
 			F_all = [p1.tolist()[1:]] + Fs + [p2.tolist()[1:]]
 			F_all = np.stack(F_all)
+
+			if logging_save:
+				log_message = 'Последовательность проведенных точек'
+				logging.debug(log_message)
+				for p in F_all:
+					logging.debug(str(p))
+
 			F_diff = []
 			for i in range(1,F_all.shape[0]-1):
 				max_l = F_all[:i,-1].max()
@@ -422,9 +438,21 @@ class Const(object):
 				max_c = min(max_l, max_r)
 				F_diff.append(max_c-F_all[i,-1])
 			F_diff = max(F_diff)
+
+			if logging_save:
+				log_message = 'Просадка профиля'
+				logging.debug(log_message)
+				logging.debug(str(F_diff))
+
 			return F_diff
 
-	def calculate_dif(self, F):
+	def calculate_dif(self, F, logging_save = False):
+
+		if logging_save:
+			logging.basicConfig(level=logging.DEBUG, filename='const_dif.log')
+
+			log_message = 'НАЧАЛО ПОДБОРА DIF ' + str(datetime.datetime.now())
+			logging.debug(log_message)
 
 		def eucl(p1,p2):
 			return sum((p1 - p2)**2)
@@ -458,7 +486,12 @@ class Const(object):
 					max_v = v
 					max_p = F[j]
 			current_points.append(max_p)
-		print(current_points)
+
+		if logging_save:
+			for k,p in enumerate(current_points):
+				log_message = 'Ключевая точка ' + str(k) + ':' + str(p)
+				logging.debug(log_message)
+
 		F_dif = []
 		done = set()
 		for i in range(len(current_points)):
@@ -469,10 +502,10 @@ class Const(object):
 				if name in done:
 					continue
 				else:
-					F_dif.append(self.get_profile(F,current_points[i],current_points[j]))
+					F_dif.append(self.get_profile(F,current_points[i],current_points[j], logging_save = logging_save))
 					done.add(name)
 					done.add(name[::-1])
-		print(F_dif)
+					
 		F_dif_good = []
 		for item in F_dif:
 			if item is not None and item>0:
@@ -492,11 +525,11 @@ class Const(object):
 			F_dif_mean_i = i*(sum(F_dif_good[:i])/len(F_dif_good[:i])-F_dif_mean)
 			if F_dif_mean_i>F_dif_max:
 				F_dif_max = F_dif_mean_i
-		F_dif_max = F_dif_max * self.config['conturs']['min_diff']
+		F_dif_max = F_dif_max * self.config['isolated_cluster']['min_dif']
 		F_diff_max = F_dif_max * 0.2
 		return F_dif_max, F_diff_max
 
-	def __calculate_const(self, X, type = 1, cluster_id=None, subcluster_id=None):
+	def __calculate_const(self, X, type = 1, cluster_id=None, subcluster_id=None, logging_save = False):
 		#
 		matrix = []
 		map_index = {k:index for k,index in enumerate(X[:,0])}
@@ -561,7 +594,7 @@ class Const(object):
 		#На выходе получаем 2 значения (коэффициент a, и среднее значение весов)
 		return max_a
 
-	def calculate_a(self, df, type_of_optimization=2, max_a=None):
+	def calculate_a(self, df, type_of_optimization=2, max_a=None, logging_save = False):
 		'''
 		Method for calcualte_a and change consts with a
 		args:
@@ -585,15 +618,15 @@ class Const(object):
 			need_names = [n for n in df.columns if n not in self.nameignore] 
 			X = df[need_names].values#приводим их np.array [id, X1, X2]
 			if type_of_optimization==0:
-				max_a = self.__calculate_const(X, 0, cluster_id, subcluster_id)
+				max_a = self.__calculate_const(X, 0, cluster_id, subcluster_id, logging_save = logging_save)
 			elif type_of_optimization==1:
-				max_a = self.__calculate_const(X, 1, cluster_id, subcluster_id)
+				max_a = self.__calculate_const(X, 1, cluster_id, subcluster_id, logging_save = logging_save)
 			elif type_of_optimization==2:
-				max_a = self.__calculate_const(X, 2, cluster_id, subcluster_id)
+				max_a = self.__calculate_const(X, 2, cluster_id, subcluster_id, logging_save = logging_save)
 			elif type_of_optimization==3:
-				max_a = self.__calculate_const(X, 3, cluster_id, subcluster_id)
+				max_a = self.__calculate_const(X, 3, cluster_id, subcluster_id, logging_save = logging_save)
 			elif type_of_optimization==4:
-				max_a = self.__calculate_const(X, 4, cluster_id, subcluster_id)
+				max_a = self.__calculate_const(X, 4, cluster_id, subcluster_id, logging_save = logging_save)
 			else:
 				print('Not implemented')
 		else:
@@ -612,7 +645,7 @@ class Const(object):
 
 		X = df[need_names].values#приводим их np.array [id, X1, X2]
 
-		min_dif, min_diff = self.calculate_dif(X)
+		min_dif, min_diff = self.calculate_dif(X, logging_save = logging_save)
 		if min_dif is None or min_dif is None:
 			text += 'Вероятно, Ваши данные распределены монолитно и не распадаются на кластеры. Если кластеризации все-таки требуется добиться, — попробуйте вручную уменьшить величину «а» и повторить процесс\n'
 			self.config['conturs']['min_diff'] = float(round(1.1, self.config['consts']['round_const']))

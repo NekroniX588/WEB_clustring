@@ -5,6 +5,8 @@ import pandas as pd
 from .models import Projects
 from .forms import AuthUserForm, RegisterUserForm, ProjectsForm
 
+from .models import Projects
+
 from core.reader import Reader
 from core.const import Const
 from core.fastclustering import Fast_Clusters
@@ -25,6 +27,7 @@ from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.conf import settings
 # Create your views here.
 
+LOGGING = True
 
 reader = Reader()
 
@@ -261,7 +264,7 @@ def calculate_a(request, pk, type_optimization):
 	const = Const('./settings/'+data.settings.url)
 	const.norm(df)
 	reader.write(df, './df/'+data.attach.url)
-	text = const.calculate_a(df, type_optimization)
+	text = const.calculate_a(df, type_optimization, logging_save=LOGGING)
 	data.comments += text
 	data.save()
 

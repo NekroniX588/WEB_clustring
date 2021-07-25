@@ -38,13 +38,7 @@ class Fast_Clusters():
 				for j in range(1, len(p1)-1):
 					x.append((p1[j] + p2[j]*(i+1)/(num_of_segments-i))/(1+(i+1)/(num_of_segments-i)))
 				points.append(np.array(x))
-			# for point in points:
-			# 	print('==='*20)
-			# 	print(point)
-			# 	print('==='*20)
-			# Fs = [[p for p in point[1:] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]] \
-			# 																						for point in points]
-			# print(Fs[:5])
+
 			Fs = []
 			for point in points:
 				pp = [p for p in point[1:]] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]

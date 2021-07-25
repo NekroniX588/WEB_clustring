@@ -3,10 +3,10 @@ import numpy as np
 from tqdm import tqdm
 from core.utils import get_F_example
 
-import logging
+# import logging
 
-logging.basicConfig(level=logging.DEBUG, filename='log.log')
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.DEBUG, filename='log.log')
+# logger = logging.getLogger(__name__)
 
 class Clusters():
 	def __init__(self, config):
