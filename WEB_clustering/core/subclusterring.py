@@ -247,8 +247,15 @@ class Subclusters(object):
 
 
 		closed_points, closed_points_id = self.__generate_key_points(X)
-		print(closed_points)
-		print(closed_points_id)
+		if logging_save:
+			log_message = 'Концевые точки'
+			logging.debug(log_message)
+			for p in closed_points:
+				logging.debug(str(p))
+			log_message = 'Уровни концевых точек'
+			logging.debug(log_message)
+			for p in closed_points_id:
+				logging.debug(str(p))
 		df = df.sort_values('F', ascending=True)
 		X = df.values
 		F_matrix = X

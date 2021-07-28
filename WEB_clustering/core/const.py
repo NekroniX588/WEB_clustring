@@ -116,7 +116,6 @@ class Const(object):
 		d.sort()
 		start = 0
 		finish = len(d)//num_of_intervals
-		print(d)
 		step = len(d)//num_of_intervals
 		for i in range(num_of_intervals-1):
 			text += 'Interval: %.d:% 5f \n'%(i,d[start:finish].mean())
@@ -488,7 +487,6 @@ class Const(object):
 					max_v = v
 					max_p = F[j]
 			current_points.append(max_p)
-
 		if logging_save:
 			for k,p in enumerate(current_points):
 				log_message = 'Ключевая точка ' + str(k) + ':' + str(p)
