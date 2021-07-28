@@ -1,6 +1,3 @@
 **/.ipynb_checkpoints
 **/__pycache__ 
 *.log
-*.csv
-*.xslx
-*.yaml
