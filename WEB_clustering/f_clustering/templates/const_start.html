@@ -82,17 +82,17 @@
       <div class="col">
         <h3>Consts</h3>
           <p title='Шаг по Y (только 2 способ)'>Y_step
-          <input name="Y_step" type="number" step="any" value={{settings.consts.Y_step}}></p>
+          <input name="Y_step" type="number" step="5" value={{settings.consts.Y_step}}></p>
           <p title='Начальная константа при подборе а'>const
           <input name="const" type="number" step="any" value={{settings.consts.const}}></p>
           <p title='Количество шагов вниз по степени для 3-го способа'>down_steps
-          <input name="down_steps" type="number" step="any" value={{settings.consts.down_steps}}></p>
+          <input name="down_steps" type="number" step="1" value={{settings.consts.down_steps}}></p>
           <p title='Максимальное количество шагов для 4-го способа'>max_depth
-          <input name="max_depth" type="number" step="any" value={{settings.consts.max_depth}}></p>
+          <input name="max_depth" type="number" step="1" value={{settings.consts.max_depth}}></p>
           <p title='Процент расстоний, который учитывается'>percent_X
-          <input name="percent_X" type="number" step="any" value={{settings.consts.percent_X}}></p>
+          <input name="percent_X" type="number" step="5" value={{settings.consts.percent_X}}></p>
           <p title='Процент точек с максимальными Y'>percent_Y
-          <input name="percent_Y" type="number" step="any" value={{settings.consts.percent_Y}}></p>
+          <input name="percent_Y" type="number" step="5" value={{settings.consts.percent_Y}}></p>
           <p title='Процент минимальных расстояний при нормировке'>percent_for_norms
           <input name="percent_for_norms" type="number" step="any" value={{settings.consts.percent_for_norms}}></p>
           <p title='Процент нулевых расстояний, больше которого не будет браться'>percent_of_zeros
@@ -140,7 +140,7 @@
           {% endif %}
         
       
-        <h3>isolated_cluster</h3>
+        <h3>Isolated_cluster</h3>
           <p title='коэф-т на который умножаем контур и если расстояния между двумя точками меньше чем контур*constU1  то Профиль не проводим'>constU1
           <input name="constU1" type="number" step="any" value={{settings.isolated_cluster.constU1}}></p>
           <p title='Минимальная длина между 2 точками для рассчета профилей'>min_len
@@ -159,6 +159,13 @@
             <p title='максимально допустимая просадка в профиле'>min_dif
             <input name="min_dif" type="number" step="any" value={{settings.isolated_cluster.min_dif}}></p>
           {% endif %}
+        <h3>Subclustering</h3>
+          <p title='Процент точек для расчета концевых точек'>Max_persent
+          <input name="Max_persent" type="number" step="any" min=10 value={{settings.subcluster.Max_persent}}></p>
+          <p title='Количество интервальных делений'>Steps
+          <input name="Steps" type="number" step="any" min=2 value={{settings.subcluster.Steps}}></p>
+          <p title='Максимальное количество точек в одном сабкластере,  внутри одного уровня'>max_key_points
+          <input name="max_key_points" type="number" step="any" min=1 value={{settings.subcluster.max_key_points}}></p>
         </div>
       </div>
       </form>

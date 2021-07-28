@@ -241,7 +241,7 @@ def const_start(request,pk):
 						calulate_with_started_a = float(request.POST[key])
 				if key in const.config[domen]:
 					if key in ['min_points', 'contour_points', 'num_of_lenghts', 'divider', 'max_div_num', 'round_const',\
-					'down_steps', 'up_steps', 'max_depth', 'n_points_for_dif']:
+					'down_steps', 'up_steps', 'max_depth', 'w', 'U', 'max_key_points', 'Steps', 'Max_persent']:
 						const.config[domen][key] = int(round(float(request.POST[key]),0))
 					else:
 						const.config[domen][key] = float(request.POST[key])
@@ -334,7 +334,7 @@ def clustering_start(request,pk):
 					const.config['conturs']['min_diff'][1] = float(request.POST[key])
 				if key in const.config[domen]:
 					if key in ['min_points', 'contour_points', 'num_of_lenghts', 'divider', 'max_div_num', 'round_const',\
-					'down_steps', 'up_steps', 'max_depth', 'w', 'U']:
+					'down_steps', 'up_steps', 'max_depth', 'w', 'U', 'max_key_points', 'Steps', 'Max_persent']:
 						const.config[domen][key] = int(round(float(request.POST[key]),0))
 					else:
 						const.config[domen][key] = float(request.POST[key])
@@ -352,7 +352,7 @@ def compute_clustering(request, pk, type_c):
 		data.comments += 'finded '+str(len(set(df['cluster_id'])))+' clusters\n'
 	elif type_c == 2:
 		fastcluster = Fast_Clusters(const.config) 
-		df = fastcluster.get_isolated_clusters(df)
+		df = fastcluster.get_isolated_clusters(df, logging_save=LOGGING)
 		data.comments += 'finded '+str(len(set(df['cluster_id'])))+' clusters\n'
 	elif type_c == 3:
 		Merger = IMerger(const.config)
@@ -363,7 +363,7 @@ def compute_clustering(request, pk, type_c):
 		sub = Subclusters(const.config)
 		if 'F' not in df.columns:
 			const.add_Fcolumn(df)
-		df = sub.subclustering(df, type_of_closed=2)
+		df = sub.subclustering(df, type_of_closed=2, logging_save=LOGGING)
 		data.comments += 'finded '+str(len(set(df['subcluster_id'])))+' subclusters\n'
 	data.save()
 	reader.write(df, './df/'+data.attach.url)

@@ -108,7 +108,7 @@
 
       {% if status_cluster %}
         <p><a href="{% url 'compute_clustering' data.id 1 %}">Кластеризация</a></p>
-        <p><a href="{% url 'compute_clustering' data.id 2 %}">Бстрая кластеризация</a></p>
+        <p><a href="{% url 'compute_clustering' data.id 2 %}">Быстрая кластеризация</a></p>
       {% endif %}
       {% if status_merge %}
         <p><a href="{% url 'compute_clustering' data.id 3 %}">Merging</a></p>

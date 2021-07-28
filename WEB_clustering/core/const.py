@@ -10,6 +10,8 @@ from core.utils import get_F, get_F_example
 
 from sklearn.metrics import pairwise_distances
 
+np.set_printoptions(suppress=True)
+
 class Const(object):
 	def __init__(self, path=None):
 		self.status = False
