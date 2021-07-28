@@ -462,6 +462,8 @@ def del_clustering(request, pk, type_c):
 
 def delete_project(request, pk):
 	data = Projects.objects.get(pk=pk)
+	os.remove('./df/'+data.attach.url)
+	os.remove('./settings/'+data.settings.url)
 	data.delete()
 	return redirect(reverse('projects'))
 
