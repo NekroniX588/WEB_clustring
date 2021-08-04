@@ -44,6 +44,10 @@
       <p><a href="{% url 'const_reload' data.id %}">Обнулисть костанты</a></p>
       <hr/>
 
+      {% if settings.consts.a %}
+        <p><a href="{% url 'get_profile' data.id %}">Провести профиль</a></p>
+        <hr/>
+      {% endif %}
       <form action="{% url 'distance_statistic' data.id %}" method="post" id="statistic">
           {% csrf_token %}
           <p>Количество интервалов</p>
@@ -173,8 +177,6 @@
       <p><button form="save" type="submit" class="btn btn-primary mt-4">Сохранить</button></p>
 
       <p><a href="{% url 'calculate_a' data.id 0 %}">Нулевой способ</a></p>
-      <p><a href="{% url 'calculate_a' data.id 1 %}">Первый способ</a></p>
-      <p><a href="{% url 'calculate_a' data.id 2 %}">Второй способ</a></p>
       <p><a href="{% url 'calculate_a' data.id 3 %}">Третий способ</a></p>
       <p><a href="{% url 'calculate_a' data.id 4 %}">Четвертый способ</a></p>
 

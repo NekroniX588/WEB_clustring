@@ -14,6 +14,7 @@ from core.clustering import Clusters
 from core.i_merge import IMerger
 from core.subclusterring import Subclusters
 from core.predictor import Classsifier
+from core.utils import GetProfile
 
 
 from django.shortcuts import render, redirect, HttpResponse
@@ -25,6 +26,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.core.files import File
 from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.conf import settings
+from django.contrib import messages
 # Create your views here.
 
 LOGGING = True
@@ -177,7 +179,49 @@ def distance_statistic(request, pk):
 	data.save()
 	return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
+def get_profile(request, pk):
+	if request.method =='GET':
+		data = Projects.objects.get(pk=pk)
+		template = 'profile_select.html'
+		context = {
+			'data': data,
+		}
+		return render(request, template, context)
+
+	elif request.method =='POST':
+		p1_id = int(request.POST.get('point1', None))
+		p2_id = int(request.POST.get('point2', None))
+
+		if p1_id == p2_id:
+			messages.error(request, 'id 2-х точек должны быть различны')
+			return redirect(reverse('get_profile', args=(pk, )))
+
+		data = Projects.objects.get(pk=pk)
+		df = reader.read('./df/'+data.attach.url)
+
+		if p1_id not in df['id']:
+			messages.error(request, 'точки с id {} нет в данных'.format(p1_id))
+			return redirect(reverse('get_profile', args=(pk, )))
+		if p2_id not in df['id']:
+			messages.error(request, 'точки с id {} нет в данных'.format(p2_id))
+			return redirect(reverse('get_profile', args=(pk, )))
+
+		const = Const('./settings/'+data.settings.url)
+		if 'F' not in df.columns:
+			const.add_Fcolumn(df)
+		getProfile = GetProfile(const.config)
+		result, array = getProfile.get_profile(df, p1_id, p2_id)
+
+		data = Projects.objects.get(pk=pk)
+		template = 'profile_result.html'
+		context = {
+			'result': result,
+			'array': array,
+		}
+		return render(request, template, context)
+
 def project_start(request,pk):
+	print(request.user.is_superuser)
 	data = Projects.objects.get(pk=pk)
 
 	df = reader.read('./df/'+data.attach.url)
@@ -356,7 +400,7 @@ def compute_clustering(request, pk, type_c):
 		data.comments += 'finded '+str(len(set(df['cluster_id'])))+' clusters\n'
 	elif type_c == 3:
 		Merger = IMerger(const.config)
-		Merger.mergeClusters(df)
+		df = Merger.mergeClusters(df, logging_save=LOGGING)
 		data.comments += 'Merging done\n'
 		data.comments += 'finded '+str(len(set(df['cluster_id'])))+' clusters\n'
 	elif type_c == 4:

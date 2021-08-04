@@ -5,11 +5,23 @@ import numpy as np
 from core.utils import get_F_example
 import pandas as pd
 
+import datetime
+
+def write_log(str):
+	with open('merging.log', 'a', encoding='utf-8') as f:
+		f.write(str+'\n')
+
 class IMerger():
 	def __init__(self, config):
 		self.config = config
 
-	def __get_profile(self, F, p1, p2):
+	def __get_profile(self, F, p1, p2, logging_save = False):
+
+		if logging_save:
+			log_message = 'Профиль для пары точек'
+			write_log(log_message)
+			write_log(str(p1))
+			write_log(str(p2))
 
 		if np.linalg.norm(np.array(p1[1:-1]) - np.array(p2[1:-1])) <= self.config['isolated_cluster']['min_len']:
 			return min(p1[-1],p2[-1])
@@ -40,6 +52,12 @@ class IMerger():
 				pp = [p for p in point[1:]] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]
 				Fs.append(pp)
 				
+			if logging_save:
+				log_message = 'Последовательность проведенных точек'
+				write_log(log_message)
+				for p in Fs:
+					write_log(str(p))
+
 			min_F = Fs[0][-1]
 			for s in Fs:
 				if s[-1]<min_F:
@@ -58,11 +76,19 @@ class IMerger():
 				M[row,i] = M[col,i]
 			M[col,i] = np.inf
 
-	def mergeClusters(self, df):
-		assert 'cluster_id' in df.columns, "Clustering step don't done"
-		assert len(set(df['cluster_id'])) > 1, "Only one cluster"
-		if 'subcluster_id' in df.columns:
-			del df['subcluster_id']
+	def mergeClusters(self, df, logging_save = False):
+		if logging_save:
+			write_log('НАЧАЛО МЕРДЖИНГА ' + str(datetime.datetime.now()))
+
+		if 'cluster_id' not in df.columns:
+			if logging_save:
+				write_log("Не расчитаны кластеры")
+			return df
+		elif len(set(df['cluster_id'])) <= 1:
+			if logging_save:
+				write_log("Только 1 кластер")
+			return df
+
 		num_clusters = len(set(df['cluster_id']))
 
 		matrix = df.iloc[:, 1:-2].values
@@ -120,7 +146,7 @@ class IMerger():
 				F_max = data[i]['F_max_cluster2']
 				x = int(data[i]['p1'][-1])
 				y = int(data[i]['p2'][-1])
-			delta = F_max - self.__get_profile(F, data[i]['p1'][:-1], data[i]['p2'][:-1])
+			delta = F_max - self.__get_profile(F, data[i]['p1'][:-1], data[i]['p2'][:-1], logging_save = logging_save)
 			if F_matrix[x, y] == np.inf:
 				F_matrix[x, y] = delta
 			elif F_matrix[x, y] > delta:
@@ -136,3 +162,4 @@ class IMerger():
 		for inds in df['cluster_id'].values:
 			new_indexes.append(index_map[inds])
 		df['cluster_id'] = new_indexes
+		return df

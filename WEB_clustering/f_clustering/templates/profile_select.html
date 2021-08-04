@@ -1,0 +1,28 @@
+{% extends 'main.html' %}
+  
+
+  {% block content %}
+
+    <div class="container">
+
+      <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
+      <hr/>
+      
+      {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+
+  	<div class="container">
+      <form action="{% url 'get_profile' data.id %}" method="post">
+      	{% csrf_token %}
+        <p>Id первой точки<input name="point1" type="number" step=1 value=1></p>
+        <p>Id второй точки<input name="point2" type="number" step=1 value=1></p>
+        <p><button type="submit" class="btn btn-primary mt-4">Провести профиль</button></p>
+      </form>
+    </div>
+  {% endblock %}

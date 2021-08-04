@@ -3,10 +3,13 @@ import numpy as np
 from tqdm import tqdm
 from core.utils import get_F_example
 
-import logging
 import datetime
 
 np.set_printoptions(suppress=True)
+
+def write_log(str):
+	with open('fastclustering.log', 'a', encoding='utf-8') as f:
+		f.write(str+'\n')
 
 class Fast_Clusters():
 	def __init__(self, config):
@@ -24,9 +27,9 @@ class Fast_Clusters():
 		# if np.linalg.norm(np.array(p1[1:-1]) - np.array(p2[1:-1]))/self.cluster_config['divider'] <= self.contur_config['min_diff']:
 		if logging_save:
 			log_message = 'Профиль для пары точек'
-			logging.debug(log_message)
-			logging.debug(str(p1))
-			logging.debug(str(p2))
+			write_log(log_message)
+			write_log(str(p1))
+			write_log(str(p2))
 
 		if np.linalg.norm(np.array(p1[1:-1]) - np.array(p2[1:-1])) <= self.cluster_config['min_len']:
 			if logging_save:
@@ -61,9 +64,9 @@ class Fast_Clusters():
 
 			if logging_save:
 				log_message = 'Последовательность проведенных точек'
-				logging.debug(log_message)
+				write_log(log_message)
 				for p in Fs:
-					logging.debug(str(p))
+					write_log(str(p))
 
 			Fmin = np.min([F[-1] for F in Fs])
 			Fstar = p1[-1] if  p1[-1] < p2[-1] else p2[-1]
@@ -71,12 +74,12 @@ class Fast_Clusters():
 			if Fstar - Fmin >= self.cluster_config['min_dif']:
 				if logging_save:
 					log_message = 'Просадка выше min_dif, статус different'
-					logging.debug(log_message)
+					write_log(log_message)
 				return 'different', Fstar - Fmin
 			else:
 				if logging_save:
 					log_message = 'Просадка ниже min_dif, статус common'
-					logging.debug(log_message)
+					write_log(log_message)
 				return 'common', Fstar - Fmin
 
 
@@ -97,8 +100,7 @@ class Fast_Clusters():
 		"""
 		#transform df to ['id', 'X1',...,'Xn'] format
 		if logging_save:
-			logging.basicConfig(level=logging.DEBUG, filename='fastclustering.log')
-			log_message = 'НАЧАЛО БЫСТРОЙ КЛАСТЕРИЗАЦИИ ' + str(datetime.datetime.now())
+			write_log('НАЧАЛО БЫСТРОЙ КЛАСТЕРИЗАЦИИ ' + str(datetime.datetime.now()))
 
 		strted_ids = df['id'].min()
 

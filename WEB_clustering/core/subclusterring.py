@@ -3,10 +3,13 @@ from tqdm import tqdm
 from core.utils import get_F_example
 import copy
 
-import logging
 import datetime
 
 np.set_printoptions(suppress=True)
+
+def write_log(str):
+	with open('subclustering.log', 'a', encoding='utf-8') as f:
+		f.write(str+'\n')
 
 class Subclusters(object):
 
@@ -23,13 +26,14 @@ class Subclusters(object):
 		# if np.linalg.norm(np.array(p1[1:-1]) - np.array(p2[1:-1]))/self.config['isolated_cluster']['divider'] <= self.config['conturs']['min_diff']:
 		if logging_save:
 			log_message = 'Профиль для пары точек'
-			logging.debug(log_message)
-			logging.debug(str(p1))
-			logging.debug(str(p2))
+			write_log(log_message)
+			write_log(str(p1))
+			write_log(str(p2))
 
 		if np.linalg.norm(np.array(p1[1:-1]) - np.array(p2[1:-1])) <= self.config['isolated_cluster']['min_len']:
 			if logging_save:
 				log_message = 'Расстояние между точками меньше min_len'
+				write_log(log_message)
 			return 'close', 0
 		else:
 			div_num = 0
@@ -42,6 +46,7 @@ class Subclusters(object):
 			if div_num == 0:
 				if logging_save:
 					log_message = 'Не удалось разбить отрезок'
+					write_log(log_message)
 				return 'close', 0
 
 			points = []
@@ -66,9 +71,9 @@ class Subclusters(object):
 	#         print(Fs)
 			if logging_save:
 				log_message = 'Последовательность проведенных точек'
-				logging.debug(log_message)
+				write_log(log_message)
 				for p in Fs:
-					logging.debug(str(p))
+					write_log(str(p))
 
 			Fmin = np.min([F[-1] for F in Fs])
 			Fstar = p1[-1] if  p1[-1] < p2[-1] else p2[-1]
@@ -76,12 +81,12 @@ class Subclusters(object):
 			if Fstar - Fmin >= self.config['isolated_cluster']['min_dif']:
 				if logging_save:
 					log_message = 'Просадка выше min_dif, статус different'
-					logging.debug(log_message)
+					write_log(log_message)
 				return 'different', Fstar - Fmin
 			else:
 				if logging_save:
 					log_message = 'Просадка ниже min_dif, статус common'
-					logging.debug(log_message)
+					write_log(log_message)
 				return 'common', Fstar - Fmin
 
 	def __calculate_distance(self, p, matrix):
@@ -249,13 +254,13 @@ class Subclusters(object):
 		closed_points, closed_points_id = self.__generate_key_points(X)
 		if logging_save:
 			log_message = 'Концевые точки'
-			logging.debug(log_message)
+			write_log(log_message)
 			for p in closed_points:
-				logging.debug(str(p))
+				write_log(str(p))
 			log_message = 'Уровни концевых точек'
-			logging.debug(log_message)
+			write_log(log_message)
 			for p in closed_points_id:
-				logging.debug(str(p))
+				write_log(str(p))
 		df = df.sort_values('F', ascending=True)
 		X = df.values
 		F_matrix = X
@@ -354,8 +359,7 @@ class Subclusters(object):
 	def subclustering(self, df, type_of_closed = 0, logging_save = False):
 
 		if logging_save:
-			logging.basicConfig(level=logging.DEBUG, filename='subclustering.log')
-			log_message = 'НАЧАЛО САБКЛАСТЕРИЗАЦИИ ' + str(datetime.datetime.now())
+			write_log('НАЧАЛО САБКЛАСТЕРИЗАЦИИ ' + str(datetime.datetime.now()))
 
 		assert 'F' in df.columns, 'ERROR! F not calulated.'
 		df['subcluster_id'] = None
@@ -363,7 +367,7 @@ class Subclusters(object):
 
 		if 'cluster_id' in df.columns:
 			clusters = list(set(df['cluster_id']))
-			print('Calculate for ', len(clusters), 'clusters')
+			write_log('Сабкластеризация для {} кластеров'.format(len(clusters)))
 			for cluster in clusters:
 				current = df[df['cluster_id']==cluster]
 				if current.shape[0]<2:#Исправить если в кластере 1 точка

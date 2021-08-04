@@ -1,4 +1,4 @@
-import logging
+import os
 import datetime
 
 import yaml
@@ -11,6 +11,10 @@ from core.utils import get_F, get_F_example
 from sklearn.metrics import pairwise_distances
 
 np.set_printoptions(suppress=True)
+
+def write_log(str):
+	with open('const_log.log', 'a', encoding='utf-8') as f:
+		f.write(str+'\n')
 
 class Const(object):
 	def __init__(self, path=None):
@@ -255,7 +259,7 @@ class Const(object):
 
 	def __calculate_weights_by_integral_Y(self, X_percent_matrix, X, started_a):
 
-
+		landscape = {}
 		list_a = [] #Создаем список для хранения всех а
 		list_summ_edge = [] #Создаем список для хранения всех средних сумм
 		
@@ -301,6 +305,7 @@ class Const(object):
 					list_summ_edge.append(summ/len(X_percent_matrix))#Добаляем среднюю сумму в список для хранения всех средних сумм
 				else:
 					list_summ_edge[-1] += summ/len(X_percent_matrix)
+			landscape[k] = list_summ_edge[-1]
 
 		#Задаем начальные значения как 0 элементы списков
 		max_summ_edge = list_summ_edge[0]
@@ -310,7 +315,7 @@ class Const(object):
 				max_summ_edge = list_summ_edge[i]
 				max_a = list_a[i]
 
-		return max_a
+		return max_a, landscape
 
 	def __one_step_integral_Y(self, X_percent_matrix, arr_Y_step, X, a):
 		
@@ -319,7 +324,7 @@ class Const(object):
 		def F_sort(arr):#Вспомогательная функция для сортировки
 			return arr[-1]
 		F.sort(key=F_sort,reverse = True)#Сортируем F по убыванию
-		plot_s = []
+
 		for i, step in enumerate(arr_Y_step):#Итерируемся по матрице шагов Y%
 			
 			# Выбираем текущий Y% матрицы
@@ -340,9 +345,66 @@ class Const(object):
 
 		return summ_edge
 
+	def __calculate_window(self, X_percent_matrix, arr_Y_step, X, started_a, landscape, start_step, total_steps):
+		print(total_steps)
+		if start_step not in landscape:
+			current_a =  started_a * (self.config['consts']['power_koef']**0)#Вычисляем текущее значение а
+			current_summ = self.__one_step_integral_Y(X_percent_matrix, arr_Y_step, X, current_a)
+			current_ = current_summ
+			landscape[start_step] = current_summ
+			total_steps += 1
+			if total_steps == self.config['consts']['max_depth']:
+				return True, total_steps
+
+		up_ = []
+		for i in range(1,self.config['consts']['up_steps']+1):
+			up_step = start_step+i
+			if up_step not in landscape:
+				up_a = started_a * (self.config['consts']['power_koef']**up_step)
+				up_summ = self.__one_step_integral_Y(X_percent_matrix, arr_Y_step, X, up_a)
+				landscape[up_step] = up_summ
+				total_steps += 1
+				if total_steps == self.config['consts']['max_depth']:
+					return True, total_steps
+
+		down_ = []
+		for i in range(1,self.config['consts']['down_steps']+1):
+			down_step = start_step-i
+			if down_step not in landscape:
+				down_a = started_a * (self.config['consts']['power_koef']**down_step)
+				down_summ = self.__one_step_integral_Y(X_percent_matrix, arr_Y_step, X, down_a)
+				landscape[down_step] = down_summ
+				total_steps += 1
+				if total_steps == self.config['consts']['max_depth']:
+					return True, total_steps
+
+		return False, total_steps
+
 	def __calculate_weights_by_integral_Y_direct(self, X_percent_matrix, X, started_a):
 
-		
+		def find_max(landscape):
+			max_value = -1
+			max_key = -1
+			for key in landscape:
+				if landscape[key] > max_value:
+					max_key = key
+					max_value = landscape[key]
+
+			return max_key
+
+		def check_plato_max(landscape):
+			max_value = -1
+			max_key = -1
+			for key in landscape:
+				if landscape[key] > max_value:
+					max_key = key
+					max_value = landscape[key]
+			values = []
+			for key in landscape:
+				if landscape[key] == max_value:
+					values.append(key)
+			return values
+
 		arr_Y_step = [] # задаем массив шагов по Y%
 		current = self.config['consts']['Y_step'] #Устанавлиаем первое значение как шаг по Y%
 
@@ -352,42 +414,32 @@ class Const(object):
 		if arr_Y_step[-1]<100: #Для случая если шаг 100/Y_step не целое (например Y_step=3%), то добавляем в конец массивf шагов по Y% 100%
 			arr_Y_step.append(100)
 
-		current_a =  started_a * (self.config['consts']['power_koef']**0)#Вычисляем текущее значение а
-		current_summ = self.__one_step_integral_Y(X_percent_matrix, arr_Y_step, X, current_a)
+		total_steps = 0
 
-		up_step = 1
-		up_a = started_a * (self.config['consts']['power_koef']**up_step)
-		up_summ = self.__one_step_integral_Y(X_percent_matrix, arr_Y_step, X, up_a)
+		landscape = {}
 
-		if up_summ >current_summ:
-			print('going up')
-			while up_summ > current_summ:
-				print('going up')
-				if up_step >= self.config['consts']['max_depth']:
-					return current_a
-				current_a = up_a
-				up_step += 1
-				up_a = started_a * (self.config['consts']['power_koef']**up_step)
-				up_summ = self.__one_step_integral_Y(X_percent_matrix, arr_Y_step, X, up_a)
-			return current_a
+		status, total_steps = self.__calculate_window(X_percent_matrix, arr_Y_step, X, started_a, landscape, 0, total_steps)
 
-		down_step = 1
-		down_a = started_a * (self.config['consts']['power_koef']**-down_step)
-		down_summ = self.__one_step_integral_Y(X_percent_matrix, arr_Y_step, X, down_a)
-
-		if down_summ > current_summ:
-			print('going down')
-			while down_summ > current_summ:
-				print('going down')
-				if down_summ >= self.config['consts']['max_depth']:
-					return current_a
-				current_a = down_a
-				up_step += 1
-				down_a = started_a * (self.config['consts']['power_koef']**up_step)
-				down_summ = self.__one_step_integral_Y(X_percent_matrix, arr_Y_step, X, down_a)
-			return current_a
-
-		return current_a
+		max_now = find_max(landscape)
+		values_old = None
+		while not status:
+			print(landscape)
+			values = check_plato_max(landscape)
+			if values == values_old:
+				break
+			values_old = values
+			if len(values) > 1:
+				status, total_steps = self.__calculate_window(X_percent_matrix, arr_Y_step, X, started_a, landscape, max(values), total_steps)
+				status, total_steps = self.__calculate_window(X_percent_matrix, arr_Y_step, X, started_a, landscape, min(values), total_steps)
+			else:
+				status, total_steps = self.__calculate_window(X_percent_matrix, arr_Y_step, X, started_a, landscape, max_now, total_steps)
+				if find_max(landscape) == max_now:
+					break
+				else:
+					max_now = find_max(landscape)
+		max_now = find_max(landscape)
+		print(max_now)
+		return started_a * (self.config['consts']['power_koef']**max_now), landscape
 
 	def get_profile(self, F, p1, p2, logging_save = False):
 		#Функция рассчета профиля F - матрица формата ['id','x1',...,'xn','F'], p1, p2 - точки формата ['id','x1',...,'xn','F']
@@ -395,9 +447,9 @@ class Const(object):
 		# if np.linalg.norm(np.array(p1[1:-1]) - np.array(p2[1:-1]))/self.cluster_config['divider'] <= self.contur_config['min_diff']:
 		if logging_save:
 			log_message = 'Профиль для пары точек'
-			logging.debug(log_message)
-			logging.debug(str(p1))
-			logging.debug(str(p2))
+			write_log(log_message)
+			write_log(str(p1))
+			write_log(str(p2))
 
 		if np.linalg.norm(np.array(p1[1:-1]) - np.array(p2[1:-1])) <= self.config['isolated_cluster']['min_len']:
 			return None
@@ -428,9 +480,9 @@ class Const(object):
 
 			if logging_save:
 				log_message = 'Последовательность проведенных точек'
-				logging.debug(log_message)
+				write_log(log_message)
 				for p in F_all:
-					logging.debug(str(p))
+					write_log(str(p))
 
 			F_diff = []
 			for i in range(1,F_all.shape[0]-1):
@@ -442,18 +494,14 @@ class Const(object):
 
 			if logging_save:
 				log_message = 'Просадка профиля'
-				logging.debug(log_message)
-				logging.debug(str(F_diff))
+				write_log(log_message)
+				write_log(str(F_diff))
 
 			return F_diff
 
 	def calculate_dif(self, F, logging_save = False):
 
-		if logging_save:
-			logging.basicConfig(level=logging.DEBUG, filename='const_dif.log')
-
-			log_message = 'НАЧАЛО ПОДБОРА DIF ' + str(datetime.datetime.now())
-			logging.debug(log_message)
+		write_log('НАЧАЛО ПОДБОРА DIF ' + str(datetime.datetime.now()))
 
 		def eucl(p1,p2):
 			return sum((p1 - p2)**2)
@@ -490,7 +538,7 @@ class Const(object):
 		if logging_save:
 			for k,p in enumerate(current_points):
 				log_message = 'Ключевая точка ' + str(k) + ':' + str(p)
-				logging.debug(log_message)
+				write_log(log_message)
 
 		F_dif = []
 		done = set()
@@ -584,14 +632,32 @@ class Const(object):
 		if type == 0:
 			max_a = started_a
 		elif type == 1:#В первом варианте высчитываем расстояния по 1-му варианту в документе
-			max_a = self.__calculate_weights_by_max(X_percent_matrix, X, started_a)
+			# max_a = self.__calculate_weights_by_max(X_percent_matrix, X, started_a)
+			max_a = started_a
+			print('DEPRECATED')
 		elif type == 2:#Во втором варианте высчитываем расстояния по 2-му варианту в документе
-			max_a = self.__calculate_weights_by_Y(X_percent_matrix, X, started_a)
+			# max_a = self.__calculate_weights_by_Y(X_percent_matrix, X, started_a)
+			max_a = started_a
+			print('DEPRECATED')
 		elif type == 3:#В третьем варианте высчитываем расстояния по 3-му варианту в документе
-			max_a = self.__calculate_weights_by_integral_Y(X_percent_matrix, X, started_a)
+			max_a, landscape = self.__calculate_weights_by_integral_Y(X_percent_matrix, X, started_a)
 		elif type == 4:#В третьем варианте высчитываем расстояния по 3-му варианту в документе
-			max_a = self.__calculate_weights_by_integral_Y_direct(X_percent_matrix, X, started_a)
+			max_a, landscape = self.__calculate_weights_by_integral_Y_direct(X_percent_matrix, X, started_a)
 		#На выходе получаем 2 значения (коэффициент a, и среднее значение весов)
+		X = []
+		Y = []
+		for x,y in sorted(list(landscape.items()), key=lambda x: x[0]):
+			X.append(x)
+			Y.append(y)
+
+		if logging_save:
+			if os.path.isfile('landscape.png'):
+				os.remove('landscape.png')   # Opt.: os.system("rm "+strFile)
+			plt.plot(X, Y)
+			plt.ylabel('Result value')
+			plt.xlabel('Step')
+			plt.savefig('landscape.png', format='png')
+			plt.clf()
 		return max_a
 
 	def calculate_a(self, df, type_of_optimization=2, max_a=None, logging_save = False):
@@ -617,18 +683,7 @@ class Const(object):
 
 			need_names = [n for n in df.columns if n not in self.nameignore] 
 			X = df[need_names].values#приводим их np.array [id, X1, X2]
-			if type_of_optimization==0:
-				max_a = self.__calculate_const(X, 0, cluster_id, subcluster_id, logging_save = logging_save)
-			elif type_of_optimization==1:
-				max_a = self.__calculate_const(X, 1, cluster_id, subcluster_id, logging_save = logging_save)
-			elif type_of_optimization==2:
-				max_a = self.__calculate_const(X, 2, cluster_id, subcluster_id, logging_save = logging_save)
-			elif type_of_optimization==3:
-				max_a = self.__calculate_const(X, 3, cluster_id, subcluster_id, logging_save = logging_save)
-			elif type_of_optimization==4:
-				max_a = self.__calculate_const(X, 4, cluster_id, subcluster_id, logging_save = logging_save)
-			else:
-				print('Not implemented')
+			max_a = self.__calculate_const(X, type_of_optimization, cluster_id, subcluster_id, logging_save = logging_save)
 		else:
 			text += 'Calculation consts with started a\n'
 		#Изменяем необходимые константы
