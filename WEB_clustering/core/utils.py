@@ -65,6 +65,4 @@ class GetProfile():
 				pp = [p for p in point[1:]] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]
 				Fs.append(pp)
 
-			Fs = sorted(Fs, key = lambda S: S[-1], reverse = False)
-
 			return 'Точки далеки', Fs

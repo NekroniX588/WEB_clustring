@@ -59,14 +59,14 @@ class Fast_Clusters():
 			for point in points:
 				pp = [p for p in point[1:]] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]
 				Fs.append(pp)
-				
-			Fs = sorted(Fs, key = lambda S: S[-1], reverse = False)
-
+			
 			if logging_save:
 				log_message = 'Последовательность проведенных точек'
 				write_log(log_message)
 				for p in Fs:
 					write_log(str(p))
+
+			Fs = sorted(Fs, key = lambda S: S[-1], reverse = False)
 
 			Fmin = np.min([F[-1] for F in Fs])
 			Fstar = p1[-1] if  p1[-1] < p2[-1] else p2[-1]

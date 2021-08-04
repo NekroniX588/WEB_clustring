@@ -501,7 +501,8 @@ class Const(object):
 
 	def calculate_dif(self, F, logging_save = False):
 
-		write_log('НАЧАЛО ПОДБОРА DIF ' + str(datetime.datetime.now()))
+		if logging_save:
+			write_log('НАЧАЛО ПОДБОРА DIF ' + str(datetime.datetime.now()))
 
 		def eucl(p1,p2):
 			return sum((p1 - p2)**2)
@@ -565,15 +566,30 @@ class Const(object):
 			F_diff_max = F_dif_max * 0.2
 			return F_dif_max, F_diff_max
 
+		if logging_save:
+			write_log("Все хорошие просадки:")
+			for F_item in F_dif_good:
+				write_log(str(F_item))
+
 		F_dif_mean = sum(F_dif_good)/len(F_dif_good)
 		F_dif_max = -9999999
+		F_dif_item = -9999999
 		F_dif_good.sort(reverse=True)
+
+		if logging_save:
+			write_log("Процесс поиска")
 
 		for i in range(1,len(F_dif_good)):
 			F_dif_mean_i = i*(sum(F_dif_good[:i])/len(F_dif_good[:i])-F_dif_mean)
+			if logging_save:
+				write_log(str(F_dif_mean_i))
 			if F_dif_mean_i>F_dif_max:
 				F_dif_max = F_dif_mean_i
-		F_dif_max = F_dif_max * self.config['isolated_cluster']['min_dif']
+				F_dif_item = sum(F_dif_good[:i])/len(F_dif_good[:i])
+		if logging_save:
+			write_log("Максимум")
+			write_log(str(F_dif_max))
+		F_dif_max = F_dif_item * self.config['isolated_cluster']['min_dif']
 		F_diff_max = F_dif_max * 0.2
 		return F_dif_max, F_diff_max
 
