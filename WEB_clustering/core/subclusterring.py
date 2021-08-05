@@ -55,13 +55,6 @@ class Subclusters(object):
 				for j in range(1, len(p1)-1):
 					x.append((p1[j] + p2[j]*(i+1)/(num_of_segments-i))/(1+(i+1)/(num_of_segments-i)))
 				points.append(np.array(x))
-			# Fs = []
-			# for point in points:
-			# 	F_cur = get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)
-			# 	Fs.append([point[1],  point[2], F_cur])
-			# Fs = [[point[1],  point[2], get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)] for point in points]#&&&&&&&&&&&???????????
-			# Fs = [[p for p in point[1:] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]] \
-			# 																						for point in points]
 			Fs = []
 			for point in points:
 				pp = [p for p in point[1:]] + [get_F_example([f[:-1] for f in F], self.config['consts']['a'], target=point)]
@@ -122,7 +115,7 @@ class Subclusters(object):
 		"""
 		return np.linalg.norm(np.array(A[1:-1]) - np.array(B[1:-1]))
 	
-	def __merge(self, A, A_id, B, B_id, F_matrix):
+	def __merge(self, A, A_id, B, B_id, F_matrix, logging_save = False):
 		"""
 		A - list of points [id, X1,...,Xn,F]
 		B - list of points [id, X1,...,Xn,F]
@@ -130,10 +123,16 @@ class Subclusters(object):
 		=======
 		return - bool value, status for merging clusters
 		"""
+		done = set()
 		for i in range(len(A)):
 			for j in range(len(B)):
 				if A_id[i]==B_id[j]:
-					result, _ = self.__get_profile(F_matrix, A[i], B[j])
+					line = str(i)+'_'+str(j)
+					if line in done:
+						continue
+					done.add(str(i)+'_'+str(j))
+					done.add(str(j)+'_'+str(i))
+					result, _ = self.__get_profile(F_matrix, A[i], B[j], logging_save = logging_save)
 
 					if result == 'different':
 						return False
@@ -246,7 +245,7 @@ class Subclusters(object):
 				indexes += self.__delete_procedure(list_delete, list_global_id)
 		return indexes
 
-	def __subclusterig(self, df, type_of_closed= 0, logging_save = False):
+	def __subclusterig(self, df, F_matrix, logging_save = False):
 
 		df = df.sort_values('F', ascending=False)
 		X = df.values
@@ -265,13 +264,15 @@ class Subclusters(object):
 				write_log(str(p))
 		df = df.sort_values('F', ascending=True)
 		X = df.values
-		F_matrix = X
+		F_matrix = F_matrix
 
 		subcluster_result = {int(x[0]):None for x in X}
 		subcluster = 0
 		start = True
 
 		for k,p in enumerate(tqdm(X)):
+			if logging_save:
+				write_log("Анализируем точку {}".format(p))
 			if k == X.shape[0]-1:
 				index = self.__calculate_distance(p,X)
 				subcluster_result[int(p[0])] = subcluster_result[int(X[index][0])]
@@ -281,7 +282,8 @@ class Subclusters(object):
 				index = self.__calculate_distance(p,X[k:]) # find nearest neighbor
 				result, value = self.__get_profile(F_matrix, p, X[k+index,], logging_save = logging_save) #calculate profile
 				nearest_p = X[k+index]
-
+			if logging_save:
+				write_log("Ближайшая точка {}".format(nearest_p))
 			if result != 'common' and result != 'close': # Если точки разные
 				if subcluster_result[int(p[0])] == None:
 					if not start:
@@ -320,8 +322,16 @@ class Subclusters(object):
 							B_id.append(closed_points_id[index])
 							B_id_merge.append(1)
 							B_global_id.append(index)
+					if logging_save:
+						write_log("Проверка 2-х кластеров:")
+						write_log("1-вый кластер")
+						for p_i in range(len(A)):
+							write_log('Точка:{} Уровень:{} Уровень для мерджинга:{}'.format(A[p_i],A_id[p_i],A_id_merge[p_i]))
+						write_log("2-ой кластер")
+						for p_i in range(len(B)):
+							write_log('Точка:{} Уровень:{} Уровень для мерджинга:{}'.format(B[p_i],B_id[p_i],B_id_merge[p_i]))
 					# Проверяем их на слияние
-					if not self.__merge(A, A_id_merge, B, B_id_merge, F_matrix):#Если разные, то проверяем куда отнести ближайшую точку
+					if not self.__merge(A, A_id_merge, B, B_id_merge, F_matrix, logging_save = logging_save):#Если разные, то проверяем куда отнести ближайшую точку
 						if subcluster_result[int(p[0])] == None:
 							if not start:
 								subcluster += 1
@@ -345,6 +355,7 @@ class Subclusters(object):
 								if subcluster_result[p_name] == deleted_cluster:
 									subcluster_result[p_name] = subcluster_result[int(nearest_p[0])]
 							remove_ids = self.__delete_closed_points(A[1:]+B[1:], A_id[1:]+B_id[1:], A_global_id+B_global_id)
+							
 							closed_points_new = []
 							closed_points_id_new = []
 							for i in range(len(closed_points)):
@@ -367,19 +378,21 @@ class Subclusters(object):
 		df['subcluster_id'] = None
 		self.max_index_sub = 0
 
+		need_names = [n for n in df.columns if n not in self.nameignore] 
+		F_matrix = df[need_names].values
+
 		if 'cluster_id' in df.columns:
 			clusters = list(set(df['cluster_id']))
 			write_log('Сабкластеризация для {} кластеров'.format(len(clusters)))
 			for cluster in clusters:
 				current = df[df['cluster_id']==cluster]
 				if current.shape[0]<2:#Исправить если в кластере 1 точка
-					# print(df[df['cluster_id']==cluster]['subcluster_id'].shape)
 					df.at[df[df['cluster_id']==cluster].index, 'subcluster_id'] = self.max_index_sub
 					self.max_index_sub += 1
 					continue
 				need_names = [n for n in current.columns if n not in self.nameignore] 
 				current = current[need_names]
-				result = self.__subclusterig(current, type_of_closed, logging_save = logging_save)
+				result = self.__subclusterig(current, F_matrix=F_matrix, logging_save = logging_save)
 				self.__norm_sub_index(result)
 				for name in result.keys():
 					df.at[df[df['id']==name].index, 'subcluster_id'] = result[name]
@@ -387,7 +400,7 @@ class Subclusters(object):
 			current = df
 			need_names = [n for n in current.columns if n not in self.nameignore] 
 			current = current[need_names]
-			result = self.__subclusterig(current, type_of_closed, logging_save = logging_save)
+			result = self.__subclusterig(current, F_matrix=F_matrix, logging_save = logging_save)
 			self.__norm_sub_index(result)
 			for name in result.keys():
 				df.at[df[df['id']==name].index, 'subcluster_id'] = result[name]
