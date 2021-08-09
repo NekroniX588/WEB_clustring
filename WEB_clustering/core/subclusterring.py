@@ -180,8 +180,8 @@ class Subclusters(object):
 	def __check_point(self, p1, p2, F_layers):
 		for k,F in enumerate(F_layers):
 			if p1[-1]>=F and p2[-1]<F:
-				return True, k 
-		return False, None
+				return True, k, p1[-1], F
+		return False, None, None, None
 
 	def __generate_key_points(self, X):
 		"""
@@ -198,7 +198,7 @@ class Subclusters(object):
 				continue
 			point = X[i]
 			nearest, min_len_points = self.__find_nearest_point(point, X[i+1:])
-			boolean, layer_id = self.__check_point(point, nearest, F_layers)
+			boolean, layer_id, F_i, F_d = self.__check_point(point, nearest, F_layers)
 
 			if boolean:
 				# print(point)
@@ -206,7 +206,10 @@ class Subclusters(object):
 				key_points.append(point)
 				key_points_id.append(layer_id)
 				# print(i)
-				skip_points += [i+1+j for j in min_len_points]
+				for j in min_len_points:
+					if X[i+1+j,-1] < F_i and X[i+1+j,-1] > F_d:
+						skip_points.append(i+1+j)
+				# skip_points += [i+1+j for j in min_len_points]
 				# print(skip_points)
 				# print('======='*30)
 		return key_points, key_points_id
@@ -249,7 +252,7 @@ class Subclusters(object):
 
 		df = df.sort_values('F', ascending=False)
 		X = df.values
-		self.max_key_points = self.config['subcluster']['max_key_points']*(X.shape[1]-2)
+		self.max_key_points = self.config['subcluster']['max_key_points']*(X.shape[1]-3)
 
 
 		closed_points, closed_points_id = self.__generate_key_points(X)
@@ -331,7 +334,7 @@ class Subclusters(object):
 						for p_i in range(len(B)):
 							write_log('Точка:{} Уровень:{} Уровень для мерджинга:{}'.format(B[p_i],B_id[p_i],B_id_merge[p_i]))
 					# Проверяем их на слияние
-					if not self.__merge(A, A_id_merge, B, B_id_merge, F_matrix, logging_save = logging_save):#Если разные, то проверяем куда отнести ближайшую точку
+					if not self.__merge(A, A_id, B, B_id, F_matrix, logging_save = logging_save):#Если разные, то проверяем куда отнести ближайшую точку
 						if subcluster_result[int(p[0])] == None:
 							if not start:
 								subcluster += 1

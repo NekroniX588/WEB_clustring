@@ -43,7 +43,7 @@ class Const(object):
 			finish = lenght
 			time_d = d[start:lenght]
 			print('Persent of zeros start:',len(time_d[time_d==0])/len(time_d),'for X', i)
-			while finish<=len(d)-1 and len(time_d[time_d==0])/len(time_d) > self.config['consts']['percent_of_zeros']:
+			while finish<=len(d)-1 and len(time_d[time_d==0])/len(time_d) > self.config['consts']['percent_of_zeros']/100:
 				start += 1
 				finish += 1
 				time_d = d[start:finish]
@@ -129,6 +129,8 @@ class Const(object):
 		text += '='*20 + '\n'
 		return text
 
+	def PCA(self, df, coords):
+		return df
 
 	def save_consts(self, path):
 		assert type(path) == str, 'Name should be str'
@@ -633,7 +635,7 @@ class Const(object):
 		finish = lenght
 		time_d = distance_matrix[start:finish]
 		print('Persent of zeros start:',len(time_d[time_d[:,2]==0])/len(time_d))
-		while finish<=len(distance_matrix)-1 and len(time_d[time_d[:,2]==0])/len(time_d) > self.config['consts']['percent_of_zeros']:
+		while finish<=len(distance_matrix)-1 and len(time_d[time_d[:,2]==0])/len(time_d) > self.config['consts']['percent_of_zeros']/100:
 			print('Persent of zeros new:',len(time_d[time_d[:,2]==0])/len(time_d))
 			start += 1
 			finish += 1
@@ -660,13 +662,14 @@ class Const(object):
 		elif type == 4:#В третьем варианте высчитываем расстояния по 3-му варианту в документе
 			max_a, landscape = self.__calculate_weights_by_integral_Y_direct(X_percent_matrix, X, started_a)
 		#На выходе получаем 2 значения (коэффициент a, и среднее значение весов)
-		X = []
-		Y = []
-		for x,y in sorted(list(landscape.items()), key=lambda x: x[0]):
-			X.append(x)
-			Y.append(y)
-
 		if logging_save:
+			X = []
+			Y = []
+			for x,y in sorted(list(landscape.items()), key=lambda x: x[0]):
+				X.append(x)
+				Y.append(y)
+
+		
 			if os.path.isfile('landscape.png'):
 				os.remove('landscape.png')   # Opt.: os.system("rm "+strFile)
 			plt.plot(X, Y)
