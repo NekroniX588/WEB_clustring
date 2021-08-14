@@ -21,11 +21,13 @@ urlpatterns = [
 
     path('const_page/<int:pk>', views.const_start, name='const_start'),
     path('const_reload/<int:pk>', views.const_reload, name='const_reload'),
+    path('calculate_norms/<int:pk>', views.calculate_norms, name='calculate_norms'),
+    path('calculate_pca_norms/<int:pk>', views.calculate_pca_norms, name='calculate_pca_norms'),
     path('calculate_a/<int:pk>/<int:type_optimization>', views.calculate_a, name='calculate_a'),
-    path('f_statistic/<int:pk>', views.f_statistic, name='f_statistic'),
     path('distance_statistic/<int:pk>', views.distance_statistic, name='distance_statistic'),
     path('get_profile/<int:pk>', views.get_profile, name='get_profile'),
     
+    path('f_statistic/<int:pk>', views.f_statistic, name='f_statistic'),
     path('clustering_page/<int:pk>', views.clustering_start, name='clustering_start'),
     path('compute_clustering/<int:pk>/<int:type_c>', views.compute_clustering, name='compute_clustering'),
     path('del_clustering/<int:pk>/<int:type_c>', views.del_clustering, name='del_clustering'),
@@ -35,4 +37,6 @@ urlpatterns = [
 
     path('download_data/<int:pk>', views.download_data, name='download_data'),
     path('download_settings/<int:pk>', views.download_settings, name='download_settings'),
+    path('download_clusters/<int:pk>', views.download_clusters, name='download_clusters'),
+    path('download_subclusters/<int:pk>', views.download_subclusters, name='download_subclusters'),
 ]

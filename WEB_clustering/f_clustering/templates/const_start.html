@@ -176,9 +176,16 @@
 
       <p><button form="save" type="submit" class="btn btn-primary mt-4">Сохранить</button></p>
 
-      <p><a href="{% url 'calculate_a' data.id 0 %}">Нулевой способ</a></p>
-      <p><a href="{% url 'calculate_a' data.id 3 %}">Третий способ</a></p>
-      <p><a href="{% url 'calculate_a' data.id 4 %}">Четвертый способ</a></p>
+      {% if not settings.norms %}
+        <p><a href="{% url 'calculate_norms' data.id %}">Расчитать нормы</a></p>
+        <p><a href="{% url 'calculate_pca_norms' data.id %}">Расчитать нормы + PCA</a></p>
+      {% endif %}
+
+      {% if settings.norms %}
+        <p><a href="{% url 'calculate_a' data.id 0 %}">Нулевой способ</a></p>
+        <p><a href="{% url 'calculate_a' data.id 3 %}">Третий способ</a></p>
+        <p><a href="{% url 'calculate_a' data.id 4 %}">Четвертый способ</a></p>
+      {% endif %}
 
       <textarea name="text" class="form-control" id="exampleFormControlTextarea1" rows="10">{{data.comments}}</textarea>
       {% if settings.consts.a %}

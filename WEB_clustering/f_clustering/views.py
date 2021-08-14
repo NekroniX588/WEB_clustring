@@ -1,10 +1,11 @@
 import os 
 import io
 import pandas as pd
+import pickle
+import zipfile
 
 from .models import Projects
 from .forms import AuthUserForm, RegisterUserForm, ProjectsForm
-
 from .models import Projects
 
 from core.reader import Reader
@@ -27,9 +28,10 @@ from django.core.files import File
 from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.conf import settings
 from django.contrib import messages
+from django.core.files.base import ContentFile
 # Create your views here.
 
-LOGGING = False
+LOGGING = True
 
 reader = Reader()
 
@@ -117,6 +119,48 @@ def download_settings(request, pk):
 			response = HttpResponse(fh.read(), content_type="application/liquid")
 			response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
 			return response
+	raise Http404
+
+def download_clusters(request, pk):
+	data = Projects.objects.get(pk=pk)
+
+	df = reader.read('./df'+data.attach.url)
+
+	byte = io.BytesIO()
+	zip = zipfile.ZipFile(byte, "a")
+
+	for cluster in sorted(df['cluster_id'].unique()):
+		
+		data_byte = io.BytesIO()
+		df[df['cluster_id']==cluster].to_csv(data_byte, index=False)
+
+		zip.writestr('Cluster'+str(cluster)+'.csv', data_byte.getvalue())
+	zip.close()
+
+	response = HttpResponse(byte.getvalue(), content_type="application/zip")
+	response['Content-Disposition'] = 'inline; filename=Clusters.zip'
+	return response
+	raise Http404
+
+def download_subclusters(request, pk):
+	data = Projects.objects.get(pk=pk)
+
+	df = reader.read('./df'+data.attach.url)
+
+	byte = io.BytesIO()
+	zip = zipfile.ZipFile(byte, "a")
+
+	for cluster in sorted(df['subcluster_id'].unique()):
+		
+		data_byte = io.BytesIO()
+		df[df['subcluster_id']==cluster].to_csv(data_byte, index=False)
+
+		zip.writestr('Subcluster'+str(cluster)+'.csv', data_byte.getvalue())
+	zip.close()
+
+	response = HttpResponse(byte.getvalue(), content_type="application/zip")
+	response['Content-Disposition'] = 'inline; filename=Subclusters.zip'
+	return response
 	raise Http404
 
 def split_data(request, pk):
@@ -301,12 +345,58 @@ def const_start(request,pk):
 
 		return redirect(reverse('const_start', args=(pk, )))
 
+def calculate_norms(request, pk):
+
+	data = Projects.objects.get(pk=pk)
+	df = reader.read('./df/'+data.attach.url)
+	const = Const('./settings/'+data.settings.url)
+	const.norm(df)
+	const.save_consts('./settings/'+data.settings.url)
+	reader.write(df, './df/'+data.attach.url)
+
+	return redirect(reverse('const_start', args=(pk, )))
+
+def calculate_pca_norms(request, pk):
+	if request.method =='GET':
+
+		data = Projects.objects.get(pk=pk)
+		df = reader.read('./df/'+data.attach.url)
+
+		need_columns = []
+		for col in df.columns:
+			if 'X' in col:
+				need_columns.append(col)
+		context = {
+			'columns': need_columns,
+			'data': data,
+			}
+
+		template = 'pca.html'
+
+		return render(request, template, context)
+	elif request.method =='POST':
+		data = Projects.objects.get(pk=pk)
+		coords = request.POST.getlist('need_coords')
+		df = reader.read('./df/'+data.attach.url)
+		const = Const('./settings/'+data.settings.url)
+
+		df, pca = const.pca_norm(df, coords)
+
+		content = pickle.dumps(pca)
+		fid = ContentFile(content)
+		data.pca.save("pca.pkl", fid)
+		fid.close()
+		const.save_consts('./settings/'+data.settings.url)
+		reader.write(df, './df/'+data.attach.url)
+
+	return redirect(reverse('const_start', args=(pk, )))
+
 def calculate_a(request, pk, type_optimization):
 	data = Projects.objects.get(pk=pk)
 	df = reader.read('./df/'+data.attach.url)
 
 	const = Const('./settings/'+data.settings.url)
-	const.norm(df)
+	
 	reader.write(df, './df/'+data.attach.url)
 	text = const.calculate_a(df, type_optimization, logging_save=LOGGING)
 	data.comments += text
@@ -319,9 +409,13 @@ def calculate_a(request, pk, type_optimization):
 def const_reload(request, pk):
 	data = Projects.objects.get(pk=pk)
 	const = Const('./settings/'+data.settings.url)
-	f = open('./settings.yaml', 'r')
-	data.settings = File(f, name=os.path.basename(f.name))
-	data.save()
+	const_clear = Const('./settings.yaml')
+	for major_key in const_clear.config:
+		for minor_key in const_clear.config[major_key]:
+			const.config[major_key][minor_key] = const_clear.config[major_key][minor_key]
+	if 'a' in const.config['consts']:
+		const.config['consts'].pop('a')
+	const.save_consts('./settings/'+data.settings.url)
 	return redirect(reverse('const_start', args=(pk, )))
 
 def clustering_start(request,pk):
@@ -475,7 +569,13 @@ def classification(request, pk):
 
 		classifier = Classsifier(const.config)
 
-		df_test, text = classifier.predict(df_train, df_test)
+		print(data.pca)
+		if data.pca:
+			df_test, text = classifier.predict(df_train, df_test, './pcas/'+data.pca.url)
+		else:
+			df_test, text = classifier.predict(df_train, df_test, None)
+		
+		
 		data.comments += text
 		data.save()
 

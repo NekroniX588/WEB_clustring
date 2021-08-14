@@ -41,6 +41,15 @@
 
       <p><a href="{% url 'download_settings' data.id %}">Скачать константы</a></p>
       <hr/>
+      {% if status_del_cluster %}
+        <p><a href="{% url 'download_clusters' data.id %}">Скачать данные по кластерам</a></p>
+        <hr/>
+      {% endif %}
+
+      {% if status_del_subcluster %}
+        <p><a href="{% url 'download_subclusters' data.id %}">Скачать данные по сабкластерам</a></p>
+        <hr/>
+      {% endif %}
 
       <form action="{% url 'f_statistic' data.id %}" method="post" id="statistic">
           {% csrf_token %}

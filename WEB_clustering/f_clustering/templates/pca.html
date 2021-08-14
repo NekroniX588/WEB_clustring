@@ -1,0 +1,35 @@
+{% extends 'main.html' %}
+  
+
+  {% block content %}
+
+    <div class="container">
+
+      <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
+      <hr/>
+      
+      {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+
+  	<div class="container">
+      <h1>Выберите координаты для PCA</h1>
+      <form action="{% url 'calculate_pca_norms' data.id %}" method="post">
+      	{% csrf_token %}
+        {% for col in columns %}
+          <div class="form-check">
+            <input title='Удалить данную координату в процессе вычислений' name="need_coords" class="form-check-input" type="checkbox" value="{{col}}" id="flexCheckDefault">
+            <label title='Удалить данную координату в процессе вычислений' class="form-check-label" for="flexCheckDefault">
+              {{col}}
+            </label>
+          </div>
+        {% endfor %}
+        <p><button type="submit" class="btn btn-primary mt-4">Расчитать PCA и нормы</button></p>
+      </form>
+    </div>
+  {% endblock %}

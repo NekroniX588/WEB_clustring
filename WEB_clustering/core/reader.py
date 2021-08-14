@@ -1,4 +1,5 @@
 import pandas as pd
+import math
 from sklearn.metrics import pairwise_distances
 from sklearn.model_selection import train_test_split
 import numpy as np 
@@ -29,13 +30,13 @@ class Reader(object):
 			text += str(col) + ' contain zeros distance relation:' + str(round(d_rel,5))+ '\n'
 			d.sort()
 			start = 0
-			finish = len(d)//num_of_intervals
-			step = len(d)//num_of_intervals
+			finish = len(d)/num_of_intervals
+			step = len(d)/num_of_intervals
 			for i in range(num_of_intervals-1):
-				text += 'Interval:' + str(d[start:finish].mean()) + '\n'
+				text += 'Interval:' + str(d[math.floor(start):math.floor(finish)].mean()) + '\n'
 				start = finish
 				finish += step
-			text += 'Interval:' + str(d[start:].mean()) + '\n'
+			text += 'Interval:' + str(d[math.floor(start):].mean()) + '\n'
 			text += '*'*20 + '\n'
 		text += '='*20 + '\n'
 		return text, df

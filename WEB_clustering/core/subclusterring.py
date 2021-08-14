@@ -1,6 +1,7 @@
 import numpy as np
 from tqdm import tqdm
 from core.utils import get_F_example
+import math
 import copy
 
 import datetime
@@ -155,14 +156,16 @@ class Subclusters(object):
 		need_points = X[:len_points]
 
 		start = 0
-		finish = len(need_points)//self.config['subcluster']['Steps']
-		step = len(need_points)//self.config['subcluster']['Steps']
+		finish = len(need_points)/self.config['subcluster']['Steps']
+		step = len(need_points)/self.config['subcluster']['Steps']
 
 		for i in range(self.config['subcluster']['Steps']-1):
-			F_layers.append(need_points[start:finish,-1].mean())
+			print(need_points[math.floor(start):math.floor(finish),-1].shape)
+			F_layers.append(need_points[math.floor(start):math.floor(finish),-1].mean())
 			start = finish
 			finish += step
-		F_layers.append(need_points[start:,-1].mean())
+		print(need_points[math.floor(start):,-1].shape)
+		F_layers.append(need_points[math.floor(start):,-1].mean())
 		return F_layers
 
 	def __find_nearest_point(self, p, X):
@@ -191,6 +194,7 @@ class Subclusters(object):
 		key_points_id = []
 
 		F_layers = self.__generate_layers(X)
+
 		X = X[X[:,-1]>self.config['isolated_cluster']['min_dif']]
 		skip_points = []
 		for i in range(len(X)-1):
@@ -334,7 +338,7 @@ class Subclusters(object):
 						for p_i in range(len(B)):
 							write_log('Точка:{} Уровень:{} Уровень для мерджинга:{}'.format(B[p_i],B_id[p_i],B_id_merge[p_i]))
 					# Проверяем их на слияние
-					if not self.__merge(A, A_id, B, B_id, F_matrix, logging_save = logging_save):#Если разные, то проверяем куда отнести ближайшую точку
+					if not self.__merge(A, A_id_merge, B, B_id_merge, F_matrix, logging_save = logging_save):#Если разные, то проверяем куда отнести ближайшую точку
 						if subcluster_result[int(p[0])] == None:
 							if not start:
 								subcluster += 1

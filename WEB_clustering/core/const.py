@@ -1,6 +1,6 @@
 import os
 import datetime
-
+import math
 import yaml
 from tqdm import tqdm
 import numpy as np
@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from core.utils import get_F, get_F_example
 
 from sklearn.metrics import pairwise_distances
+from sklearn.decomposition import PCA
+
 
 np.set_printoptions(suppress=True)
 
@@ -64,12 +66,46 @@ class Const(object):
 		need_names = [n for n in df.columns if n not in self.nameignore + ['id']] 
 		df_for_norm = df[need_names]
 		X, norms = self.__normalize(df_for_norm.values, self.config['consts']['percent_for_norms'])
-		print(X[:10])
+		# print(X[:10])
 		
 		for i, col in enumerate(df_for_norm.columns[:]):
 			self.config['norms'][col] = float(np.round(norms[i], self.config['consts']['round_const']))
+		print(self.config)
 		df[need_names] = X
-		print(df)
+		# print(df)
+
+	def pca_norm(self, df, coords):
+		self.config['norms'] = {}
+		need_names = [n for n in df.columns if n not in self.nameignore + ['id']] 
+		df_for_norm = df[need_names]
+		X, norms = self.__normalize(df_for_norm.values, self.config['consts']['percent_for_norms'])
+		# print(X[:10])
+		
+		need_for_pca = []
+		pca_names = []
+		for i, col in enumerate(df_for_norm.columns[:]):
+			if col in coords:
+				self.config['norms'][col+'_original'] = float(np.round(norms[i], self.config['consts']['round_const']))
+				need_for_pca.append(i)
+				pca_names.append(col)
+			else:
+				self.config['norms'][col] = float(np.round(norms[i], self.config['consts']['round_const']))
+		for i in need_for_pca:
+			X[:,i] = X[:,i] * norms[i]
+
+		pca = PCA(n_components=len(need_for_pca))
+		pca.fit(X[:,need_for_pca])
+
+		Y = pca.transform(X[:,need_for_pca])
+
+		Y, after_pca_norms = self.__normalize(Y, self.config['consts']['percent_for_norms'])
+
+		for i in range(len(pca_names)):
+			self.config['norms'][pca_names[i]] = float(np.round(after_pca_norms[i], self.config['consts']['round_const']))
+
+		X[:,need_for_pca] = Y
+		df[need_names] = X
+		return df, pca
 
 	def get_norms(self):
 		if len(self.config['norms'])==0:
@@ -85,13 +121,15 @@ class Const(object):
 			F = df['F'].values
 			F.sort()
 			start = 0
-			finish = len(F)//num_of_intervals
-			step = len(F)//num_of_intervals
+			finish = len(F)/num_of_intervals
+			step = len(F)/num_of_intervals
 			for i in range(num_of_intervals-1):
-				text += 'Interval %.d:% 5f \n'%(i,F[start:finish].mean())
+				print(F[math.floor(start):math.floor(finish)].shape)
+				text += 'Interval %.d:% 5f \n'%(i,F[math.floor(start):math.floor(finish)].mean())
 				start = finish
 				finish += step
-			text += 'Interval %.d:% 5f \n'%(i+1,F[start:].mean())
+			print(F[math.floor(start):].shape)
+			text += 'Interval %.d:% 5f \n'%(i+1,F[math.floor(start):].mean())
 			text += '*'*20+'\n'
 		else:
 			text += 'F not calculated\n'
@@ -119,18 +157,17 @@ class Const(object):
 		text += 'data contain relation: %.5f \n'%(d_rel)
 		d.sort()
 		start = 0
-		finish = len(d)//num_of_intervals
-		step = len(d)//num_of_intervals
+		finish = len(d)/num_of_intervals
+		step = len(d)/num_of_intervals
 		for i in range(num_of_intervals-1):
-			text += 'Interval: %.d:% 5f \n'%(i,d[start:finish].mean())
+			print(d[math.floor(start):math.floor(finish)].shape)
+			text += 'Interval: %.d:% 5f \n'%(i,d[math.floor(start):math.floor(finish)].mean())
 			start = finish
 			finish += step
-		text += 'Interval: %.d:% 5f \n'%(i+1,d[start:].mean())
+		print(d[math.floor(start):].shape)
+		text += 'Interval: %.d:% 5f \n'%(i+1,d[math.floor(start):].mean())
 		text += '='*20 + '\n'
 		return text
-
-	def PCA(self, df, coords):
-		return df
 
 	def save_consts(self, path):
 		assert type(path) == str, 'Name should be str'
@@ -344,7 +381,7 @@ class Const(object):
 				summ_edge = summ/len(X_percent_matrix)#Добаляем среднюю сумму в список для хранения всех средних сумм
 			else:
 				summ_edge += summ/len(X_percent_matrix)
-
+				
 		return summ_edge
 
 	def __calculate_window(self, X_percent_matrix, arr_Y_step, X, started_a, landscape, start_step, total_steps):
@@ -382,7 +419,7 @@ class Const(object):
 
 		return False, total_steps
 
-	def __calculate_weights_by_integral_Y_direct(self, X_percent_matrix, X, started_a):
+	def __calculate_weights_by_integral_Y_direct(self, X_percent_matrix, X, started_a, logging_save = False):
 
 		def find_max(landscape):
 			max_value = -1
@@ -439,8 +476,19 @@ class Const(object):
 					break
 				else:
 					max_now = find_max(landscape)
+
+		if logging_save and status:
+			write_log("достигли максимального шага")
+
 		max_now = find_max(landscape)
-		print(max_now)
+		if logging_save:
+			write_log("Ландшафт")
+			for key in landscape:
+				write_log("Степень {}, значение {}".format(key, landscape[key]))
+		if logging_save:
+			write_log("Финальная а = {}", started_a * (self.config['consts']['power_koef']**max_now))
+
+
 		return started_a * (self.config['consts']['power_koef']**max_now), landscape
 
 	def get_profile(self, F, p1, p2, logging_save = False):
@@ -660,23 +708,23 @@ class Const(object):
 		elif type == 3:#В третьем варианте высчитываем расстояния по 3-му варианту в документе
 			max_a, landscape = self.__calculate_weights_by_integral_Y(X_percent_matrix, X, started_a)
 		elif type == 4:#В третьем варианте высчитываем расстояния по 3-му варианту в документе
-			max_a, landscape = self.__calculate_weights_by_integral_Y_direct(X_percent_matrix, X, started_a)
+			max_a, landscape = self.__calculate_weights_by_integral_Y_direct(X_percent_matrix, X, started_a, logging_save = logging_save)
 		#На выходе получаем 2 значения (коэффициент a, и среднее значение весов)
-		if logging_save:
-			X = []
-			Y = []
-			for x,y in sorted(list(landscape.items()), key=lambda x: x[0]):
-				X.append(x)
-				Y.append(y)
+		# if logging_save:
+		# 	X = []
+		# 	Y = []
+		# 	for x,y in sorted(list(landscape.items()), key=lambda x: x[0]):
+		# 		X.append(x)
+		# 		Y.append(y)
 
 		
-			if os.path.isfile('landscape.png'):
-				os.remove('landscape.png')   # Opt.: os.system("rm "+strFile)
-			plt.plot(X, Y)
-			plt.ylabel('Result value')
-			plt.xlabel('Step')
-			plt.savefig('landscape.png', format='png')
-			plt.clf()
+		# 	if os.path.isfile('landscape.png'):
+		# 		os.remove('landscape.png')   # Opt.: os.system("rm "+strFile)
+		# 	plt.plot(X, Y)
+		# 	plt.ylabel('Result value')
+		# 	plt.xlabel('Step')
+		# 	plt.savefig('landscape.png', format='png')
+		# 	plt.clf()
 		return max_a
 
 	def calculate_a(self, df, type_of_optimization=2, max_a=None, logging_save = False):
