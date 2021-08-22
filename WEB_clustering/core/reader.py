@@ -62,6 +62,7 @@ class Reader(object):
 		else:
 			print('Unsupported format')
 			return
+
 		if self.is_valid(in_df):
 			return in_df
 		else:
@@ -73,7 +74,9 @@ class Reader(object):
 		Checks if input dataframe's columns are in the right format
 		mode -- read or write 
 		'''
-		if df.shape[0]<5:
+		if df.shape[0] < 10 or df.shape[0] > 2000:
+			return False
+		if df.shape[1] > 53:
 			return False
 		coords_nums = [int(col_name[1:]) for col_name in df.columns if col_name not in self.nameignore]
 		#Add information ('F', Cluster_Id, Subcluster)

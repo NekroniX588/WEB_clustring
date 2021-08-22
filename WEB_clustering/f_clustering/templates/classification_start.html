@@ -65,6 +65,9 @@
       </form>
       <p><button form="save" type="submit" class="btn btn-primary mt-4">Классификировать</button></p>
 
+      <hr/>
+      <p><a href="{% url 'clear_log' data.id %}">Очистить лог</a></p>
+      <hr/>
       <textarea name="text" class="form-control" id="exampleFormControlTextarea1" rows="15">{{data.comments}}</textarea>
       <a href="">Далее</a>
 

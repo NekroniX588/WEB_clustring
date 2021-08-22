@@ -1,7 +1,8 @@
 consts:
   U: 90
   Y_step: 2.5
-  a: 1.09445
+  a: 0.06165
+  cluster_importancy: 0.5
   const: 0.25
   down_steps: 3
   max_depth: 10
@@ -16,25 +17,24 @@ consts:
   w: 8
 conturs:
   contour_points: 50
-  min_diff: 0.00094
+  min_diff: 0.01065
   min_points: 30
   num_of_lenghts: 4
 isolated_cluster:
   constU1: 0.05
   divider: 2
   max_div_num: 8
-  merge_threshold: 1.75
-  min_dif: 0.00472
-  min_len: 0.54723
+  merge_threshold: 0.07987
+  min_dif: 0.05324
+  min_len: 0.03082
 knots:
   min_fuses_num: 15
-  stop_const: 1.09445
+  stop_const: 0.06165
 norms:
-  X1: 1.0
-  X2: 1.0
-  X3: 1.0
-  X4: 1.0
-  X5: 1.0
+  X1: 3.09369
+  X1_original: 2.31235
+  X2: 1.70604
+  X2_original: 3.726
 subcluster:
   Max_persent: 90
   Steps: 10

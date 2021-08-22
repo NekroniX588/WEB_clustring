@@ -89,7 +89,7 @@ class Classsifier():
                     time_dfs = time_df[lambda x: x['subcluster_id']==subcluster] #Выделяем все строки относящиеся к этому подкластеру
                     F = []
                     for line in inputs:
-                        F.append(get_F_example(time_dfs[needed_names].iloc[:].values, self.config['consts']['a'], line)) #Вычисляем F для каждой строки данных для предсказания
+                        F.append(get_F_example(time_dfs[needed_names].iloc[:].values, self.config['consts']['a'], line, self.config['consts']['cluster_importancy'])) #Вычисляем F для каждой строки данных для предсказания
                     df_predict[name] = F
                     # df_predict.loc[:,name]= F
         elif 'cluster_id' in df_train.columns:
@@ -98,7 +98,7 @@ class Classsifier():
                 name = 'F_'+str(cluster) +'_NuN' # Формируем имя столбца
                 F = []
                 for line in inputs:
-                    F.append(get_F_example(time_df[needed_names].values, self.config['consts']['a'], line)) #Вычисляем F для каждой строки данных для предсказания
+                    F.append(get_F_example(time_df[needed_names].values, self.config['consts']['a'], line, self.config['consts']['cluster_importancy'])) #Вычисляем F для каждой строки данных для предсказания
                 df_predict[name] = F
                 # df_predict.loc[:,name]= F
         elif 'subcluster_id' in df_train.columns:
@@ -107,7 +107,7 @@ class Classsifier():
                 name = 'F_NuN_'+str(subcluster) # Формируем имя столбца
                 F = []
                 for line in inputs:
-                    F.append(get_F_example(time_df[needed_names].values, self.config['consts']['a'], line)) #Вычисляем F для каждой строки данных для предсказания
+                    F.append(get_F_example(time_df[needed_names].values, self.config['consts']['a'], line, self.config['consts']['cluster_importancy'])) #Вычисляем F для каждой строки данных для предсказания
                 df_predict[name] = F
                 # df_predict.loc[:,name]= F
         else:

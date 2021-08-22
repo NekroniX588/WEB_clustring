@@ -1,0 +1,106 @@
+{% extends 'main.html' %}
+
+  {% block content %}
+    
+    {% load f_extras %}
+
+  	<ul class="nav nav-pills justify-content-center">
+      <li class="nav-item">
+        {% url 'start_project' data.id as start_project %}
+        <a class="nav-link {% if start_project == request.path %} active {% endif %}" href="{% url 'start_project' data.id %}">Начальная страница</a>
+      </li>
+      <li class="nav-item">
+        {% url 'const_start' data.id as const_start %}
+        <a class="nav-link {% if const_start == request.path %} active {% endif %}" href="{% url 'const_start' data.id %}">Подбор констант</a>
+      </li>
+      <li class="nav-item">
+        {% url 'clustering_start' data.id as clustering_start %}
+        {% if data.stage >= 3 %}
+        <a class="nav-link {% if clustering_start == request.path %} active {% endif %}" href="{% url 'clustering_start' data.id %}">Кластеризация</a>
+        {% else %}
+        <p class="nav-link {% if clustering_start == request.path %} active {% endif %}" href="{% url 'clustering_start' data.id %}">Кластеризация</p>
+        {% endif %}
+      </li>
+      <li class="nav-item">
+        {% url 'classification_start' data.id as classification_start %}
+        {% if data.stage == 4 %}
+          <a class="nav-link {% if classification_start == request.path %} active {% endif %}" href="{% url 'classification_start' data.id %}">Классификация</a>
+        {% else %}
+          <p class="nav-link {% if classification_start == request.path %} active {% endif %}" href="{% url 'classification_start' data.id %}">Классификация</p>
+        {% endif %}
+      </li>
+    </ul>
+
+
+  	<div class="container">
+
+      <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
+      <hr/>
+      
+      <p><a href="{% url 'download_data' data.id %}">Скачать данные</a></p>
+      <hr/>
+
+      <p><a href="{% url 'download_settings' data.id %}">Скачать константы</a></p>
+      <hr/>
+      {% if status_del_cluster %}
+        <p><a href="{% url 'download_clusters' data.id %}">Скачать данные по кластерам</a></p>
+        <hr/>
+      {% endif %}
+
+      {% if status_del_subcluster %}
+        <p><a href="{% url 'download_subclusters' data.id %}">Скачать данные по сабкластерам</a></p>
+        <hr/>
+      {% endif %}
+
+      <form action="{% url 'clustering_start' data.id %}" method="post" id="save">
+        {% csrf_token %}
+        <div class="container">
+            <h3>Подбор констант</h3>
+
+            <p title='Процент минимальных ребер'>Процент минимальных ребер
+            <input name="percent_X" type="number" step="0.1" min="1" max = "100" value={{settings.consts.percent_X}}></p>
+
+            <p title='Начальная константа при подборе а'>Коэффициент при "а"
+            <input name="const" type="number" step="any" value={{settings.consts.const}}></p>
+
+            {% if settings.consts.a %}
+              <p style="color:red" title='Итоговое а'>a
+              <input name="a" type="number" step="any" value={{settings.consts.a}}></p>
+            {% endif %}
+        </div>
+
+        {% if settings.norms %}
+          <h3>norms</h3>
+            {% for norm in settings.norms %}
+              <p>{{norm}} {{ settings.norms|get_item:norm }}</p>
+            {% endfor %}
+        {% endif %}
+      </form>
+      <p><button form="save" type="submit" class="btn btn-primary mt-4">Сохранить</button></p>
+
+      {% if status_cluster %}
+        <p><a href="{% url 'compute_clustering' data.id 2 %}">Быстрая кластеризация</a></p>
+      {% endif %}
+      {% if status_merge %}
+        <p><a href="{% url 'compute_clustering' data.id 3 %}">Merging</a></p>
+      {% endif %}
+      {% if status_subcluster %}
+        <p><a href="{% url 'compute_clustering' data.id 4 %}">Сабкластеризация</a></p>
+      {% endif %}
+
+      {% if status_del_cluster %}
+        <p><a href="{% url 'del_clustering' data.id 1 %}">Удалить результаты кластеризации</a></p>
+      {% endif %}
+
+      {% if status_del_subcluster %}
+        <p><a href="{% url 'del_clustering' data.id 2 %}">Удалить результаты сабкластеризации</a></p>
+      {% endif %}
+
+      <hr/>
+      <p><a href="{% url 'clear_log' data.id %}">Очистить лог</a></p>
+      <hr/>
+      <textarea name="text" class="form-control" id="exampleFormControlTextarea1" rows="10">{{data.comments}}</textarea>
+      <a href="{% url 'classification_start' data.id %}">Далее</a>
+
+  	</div>
+  {% endblock %}

@@ -53,7 +53,9 @@
       <hr/>
       {% endif %}
       
-
+      <hr/>
+      <p><a href="{% url 'clear_log' data.id %}">Очистить лог</a></p>
+      <hr/>
       <textarea name="text" class="form-control" id="exampleFormControlTextarea1" rows="15">{{data.comments}}</textarea>
       {% if data.stage == 1 or data.stage == 2 %}
         <a href="{% url 'const_start' data.id %}">Далее</a>

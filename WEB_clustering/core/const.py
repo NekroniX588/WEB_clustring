@@ -124,13 +124,26 @@ class Const(object):
 			finish = len(F)/num_of_intervals
 			step = len(F)/num_of_intervals
 			for i in range(num_of_intervals-1):
-				print(F[math.floor(start):math.floor(finish)].shape)
-				text += 'Interval %.d:% 5f \n'%(i,F[math.floor(start):math.floor(finish)].mean())
+				text += 'Интревал %.d:% 5f \n'%(i,F[math.floor(start):math.floor(finish)].mean())
 				start = finish
 				finish += step
-			print(F[math.floor(start):].shape)
-			text += 'Interval %.d:% 5f \n'%(i+1,F[math.floor(start):].mean())
+			text += 'Интревал %.d:% 5f \n'%(i+1,F[math.floor(start):].mean())
 			text += '*'*20+'\n'
+			text += 'Статистика по количеству \n'
+			step = F[-1] / num_of_intervals
+			interval = 0
+			previous = 0
+			current = step
+			counter = 0
+			for i in range(len(F)):
+				if F[i] < current:
+					counter += 1
+				else:
+					text += 'Интревал %.d [%5f, %5f] количество = %.d \n'%(interval,previous,current,counter)
+					interval += 1
+					previous = current
+					current += step
+					counter = 0
 		else:
 			text += 'F not calculated\n'
 		return text
@@ -486,7 +499,7 @@ class Const(object):
 			for key in landscape:
 				write_log("Степень {}, значение {}".format(key, landscape[key]))
 		if logging_save:
-			write_log("Финальная а = {}", started_a * (self.config['consts']['power_koef']**max_now))
+			write_log("Финальная а = {}".format(started_a * (self.config['consts']['power_koef']**max_now)))
 
 
 		return started_a * (self.config['consts']['power_koef']**max_now), landscape
@@ -737,7 +750,7 @@ class Const(object):
 		text = ''
 		if max_a is None:
 			if self.status == True:
-				text += 'You are calculate consts yet. Please, reload const from default settings\n'
+				text += 'Константы уже подсчитаны. Начните проект заново.\n'
 				return text
 
 			cluster_id = None
@@ -774,6 +787,8 @@ class Const(object):
 			self.config['isolated_cluster']['min_dif'] = float(round(1.1, self.config['consts']['round_const']))
 		self.config['conturs']['min_diff'] = float(np.round(min_diff, self.config['consts']['round_const']))
 		self.config['isolated_cluster']['min_dif'] = float(np.round(min_dif, self.config['consts']['round_const']))
+		self.config['isolated_cluster']['merge_threshold'] = float(np.round(1.5*min_dif, self.config['consts']['round_const']))
+		print(min_dif)
 		# value = 1./((max_a * self.config['conturs']['min_diff'][0])**2\
 		# 	+ max_a * self.config['conturs']['min_diff'][1])
 		# self.config['conturs']['min_diff'] = float(np.round(value, self.config['consts']['round_const']))
@@ -782,5 +797,5 @@ class Const(object):
 		# 	+ max_a * self.config['isolated_cluster']['min_dif'][1])
 		# self.config['isolated_cluster']['min_dif'] = float(np.round(value, self.config['consts']['round_const']))
 		# self.status = True
-		text += 'Everything good :)\n'
+		text += 'Константы подсчитаны\n'
 		return text

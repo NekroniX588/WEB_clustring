@@ -17,6 +17,7 @@ urlpatterns = [
     path('start_page/<int:pk>', views.project_start, name='start_project'),
     path('statistic/<int:pk>', views.statistic, name='statistic'),
     path('show_data/<int:pk>', views.table, name='table'),
+    path('clear_log/<int:pk>', views.clear_log, name='clear_log'),
     path('split_data/<int:pk>', views.split_data, name='split_data'),
 
     path('const_page/<int:pk>', views.const_start, name='const_start'),

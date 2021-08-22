@@ -1,5 +1,6 @@
 import os 
 import io
+import yaml
 import pandas as pd
 import pickle
 import zipfile
@@ -31,14 +32,14 @@ from django.contrib import messages
 from django.core.files.base import ContentFile
 # Create your views here.
 
-LOGGING = True
+LOGGING = False
 
 reader = Reader()
 
 def main(request):
 	context = {
 	}
-	template = 'main.html'
+	template = 'main_page.html'
 	return render(request, template, context)
 
 class SpeechLoginView(LoginView):
@@ -71,8 +72,6 @@ class SpeechProjectsView(ListView):
 		kwargs['data'] = Projects.objects.filter(author = self.request.user).order_by('-date')
 		return super().get_context_data(**kwargs)
 
-
-
 class SpeechProjectsCreate(CreateView): # новый
 	model = Projects
 	form_class = ProjectsForm
@@ -88,8 +87,14 @@ class SpeechProjectsCreate(CreateView): # новый
 		self.object.stage = 1
 
 		self.object.save()
-		if reader.read('./df/'+self.object.attach.url) is not None:
+		df = reader.read('./df/'+self.object.attach.url)
+		if df is not None:
 			self.object.status = True
+			# if 'cluster_id' in df.columns:
+			# 	del df['cluster_id']
+			# if 'subcluster_id' in df.columns:
+			# 	del df['subcluster_id']
+			reader.write(df, './df/'+self.object.attach.url)
 		else:
 			self.object.status = False
 
@@ -100,6 +105,12 @@ def table(request, pk):
 	df = reader.read('./df'+data.attach.url)
 	geeks_object = df.to_html()
 	return HttpResponse(geeks_object)
+
+def clear_log(request, pk):
+	data = Projects.objects.get(pk=pk)
+	data.comments = ""
+	data.save()
+	return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def download_data(request, pk):
 	data = Projects.objects.get(pk=pk)
@@ -114,11 +125,32 @@ def download_data(request, pk):
 def download_settings(request, pk):
 	data = Projects.objects.get(pk=pk)
 	file_path = './settings/'+data.settings.url
-	if os.path.exists(file_path):
-		with open(file_path, 'rb') as fh:
-			response = HttpResponse(fh.read(), content_type="application/liquid")
-			response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
-			return response
+	if request.user.is_superuser:
+		if os.path.exists(file_path):
+			with open(file_path, 'rb') as fh:
+				response = HttpResponse(fh.read(), content_type="application/liquid")
+				response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
+				return response
+	else:
+		Drop_category = ['conturs', 'knots', 'isolated_cluster', 'subcluster']
+		Drop_keys = [['consts', 'round_const'], ['consts', 'power_koef'], ['consts', 'percent_Y'], \
+					 ['consts', 'threshold'], ['consts', 'cluster_importancy'], ['consts', 'w'], \
+					 ['consts', 'Y_step'], ['consts', 'down_steps'], ['consts', 'up_steps'],\
+					 ['consts', 'max_depth'], ['consts', 'percent_for_norms'], ['consts', 'percent_of_zeros'],
+					 ['consts', 'U']]
+		const = Const('./settings/'+data.settings.url)
+		for domen in Drop_category:
+			const.config.pop(domen)
+		for domen, key in Drop_keys:
+			const.config[domen].pop(key)
+
+		byte = io.StringIO()
+		yaml.dump(const.config, byte)
+
+		response = HttpResponse(byte.getvalue(), content_type="application/liquid")
+		response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
+		return response
+
 	raise Http404
 
 def download_clusters(request, pk):
@@ -265,7 +297,6 @@ def get_profile(request, pk):
 		return render(request, template, context)
 
 def project_start(request,pk):
-	print(request.user.is_superuser)
 	data = Projects.objects.get(pk=pk)
 
 	df = reader.read('./df/'+data.attach.url)
@@ -301,7 +332,10 @@ def const_start(request,pk):
 			'data': data,
 			'settings': const.config,
 		}
-		template = 'const_start.html'
+		if request.user.is_superuser:
+			template = 'const_start.html'
+		else:
+			template = 'const_start_base.html'
 
 		return render(request, template, context)
 
@@ -377,9 +411,12 @@ def calculate_pca_norms(request, pk):
 	elif request.method =='POST':
 		data = Projects.objects.get(pk=pk)
 		coords = request.POST.getlist('need_coords')
+		if len(coords) < 2:
+			messages.error(request, 'Необходимо минимум 2 координаты для PCA')
+			return redirect(reverse('calculate_pca_norms', args=(pk, )))
+
 		df = reader.read('./df/'+data.attach.url)
 		const = Const('./settings/'+data.settings.url)
-
 		df, pca = const.pca_norm(df, coords)
 
 		content = pickle.dumps(pca)
@@ -453,7 +490,10 @@ def clustering_start(request,pk):
 			'status_del_subcluster': status_del_subcluster,
 			'rows': df.shape[0],
 		}
-		template = 'clustering_start.html'
+		if request.user.is_superuser:
+			template = 'clustering_start.html'
+		else:
+			template = 'clustering_start_base.html'
 
 		return render(request, template, context)
 	elif request.method =='POST':
@@ -487,22 +527,22 @@ def compute_clustering(request, pk, type_c):
 	if type_c == 1:
 		cluster = Clusters(const.config) 
 		df = cluster.get_isolated_clusters(df)
-		data.comments += 'finded '+str(len(set(df['cluster_id'])))+' clusters\n'
+		data.comments += 'Нашлось '+str(len(set(df['cluster_id'])))+' кластера\n'
 	elif type_c == 2:
 		fastcluster = Fast_Clusters(const.config) 
 		df = fastcluster.get_isolated_clusters(df, logging_save=LOGGING)
-		data.comments += 'finded '+str(len(set(df['cluster_id'])))+' clusters\n'
+		data.comments += 'Нашлось '+str(len(set(df['cluster_id'])))+' кластера\n'
 	elif type_c == 3:
 		Merger = IMerger(const.config)
 		df = Merger.mergeClusters(df, logging_save=LOGGING)
-		data.comments += 'Merging done\n'
-		data.comments += 'finded '+str(len(set(df['cluster_id'])))+' clusters\n'
+		data.comments += 'Мерджинг проделан\n'
+		data.comments += 'Нашлось '+str(len(set(df['cluster_id'])))+' кластера\n'
 	elif type_c == 4:
 		sub = Subclusters(const.config)
 		if 'F' not in df.columns:
 			const.add_Fcolumn(df)
 		df = sub.subclustering(df, type_of_closed=2, logging_save=LOGGING)
-		data.comments += 'finded '+str(len(set(df['subcluster_id'])))+' subclusters\n'
+		data.comments += 'Нашлось '+str(len(set(df['subcluster_id'])))+' сабкластеров\n'
 	data.save()
 	reader.write(df, './df/'+data.attach.url)
 	return redirect(reverse('clustering_start', args=(pk, )))
@@ -554,7 +594,7 @@ def classification(request, pk):
 		pk_test = request.POST.get('project', None)
 		if pk_test is None:
 			data = Projects.objects.get(pk=pk)
-			data.comments += 'No data for classification\n'
+			data.comments += 'Нет данных для классификации \n'
 			data.save()
 			return redirect(reverse('classification_start', args=(pk, )))
 

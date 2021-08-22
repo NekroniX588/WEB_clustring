@@ -10,7 +10,7 @@ isolated_cluster: # Первые этап - получение изолиров�
   min_dif: 1
   divider: 2
   max_div_num: 8
-  merge_threshold: 1.75 #Константа разницы Ф для мерджинга
+  merge_threshold: 1 #Константа разницы Ф для мерджинга
 
 subcluster:
   Steps: 10
@@ -36,3 +36,4 @@ consts:
   Y_step: 2.5
   w: 8
   U: 90
+  cluster_importancy: 0.5
