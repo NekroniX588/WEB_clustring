@@ -788,7 +788,6 @@ class Const(object):
 		self.config['conturs']['min_diff'] = float(np.round(min_diff, self.config['consts']['round_const']))
 		self.config['isolated_cluster']['min_dif'] = float(np.round(min_dif, self.config['consts']['round_const']))
 		self.config['isolated_cluster']['merge_threshold'] = float(np.round(1.5*min_dif, self.config['consts']['round_const']))
-		print(min_dif)
 		# value = 1./((max_a * self.config['conturs']['min_diff'][0])**2\
 		# 	+ max_a * self.config['conturs']['min_diff'][1])
 		# self.config['conturs']['min_diff'] = float(np.round(value, self.config['consts']['round_const']))

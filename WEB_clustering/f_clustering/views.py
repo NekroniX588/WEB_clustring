@@ -85,8 +85,8 @@ class SpeechProjectsCreate(CreateView): # новый
 		self.object.settings = File(f, name=os.path.basename(f.name))
 
 		self.object.stage = 1
-
 		self.object.save()
+
 		df = reader.read('./df/'+self.object.attach.url)
 		if df is not None:
 			self.object.status = True
@@ -94,9 +94,9 @@ class SpeechProjectsCreate(CreateView): # новый
 			# 	del df['cluster_id']
 			# if 'subcluster_id' in df.columns:
 			# 	del df['subcluster_id']
-			reader.write(df, './df/'+self.object.attach.url)
+			# reader.write(df, './df/'+self.object.attach.url)
 		else:
-			self.object.status = False
+			messages.error(self.request, 'Ошибка формата данных!!!')
 
 		return super().form_valid(form)
 
@@ -646,8 +646,10 @@ def del_clustering(request, pk, type_c):
 
 def delete_project(request, pk):
 	data = Projects.objects.get(pk=pk)
-	os.remove('./df/'+data.attach.url)
-	os.remove('./settings/'+data.settings.url)
+	if os.path.exists('./df/'+data.attach.url):
+		os.remove('./df/'+data.attach.url)
+	if os.path.exists('./settings/'+data.settings.url):
+		os.remove('./settings/'+data.settings.url)
 	data.delete()
 	return redirect(reverse('projects'))
 

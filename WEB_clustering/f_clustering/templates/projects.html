@@ -1,7 +1,17 @@
 {% extends 'main.html' %}
 
   {% block content %}
-    
+
+    <div class="container">
+      {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+
   	<div class="container">
 
       {% url 'add_projects' as url_add_projects %}
@@ -17,8 +27,12 @@
         </thead>
         <tbody>
           {% for i in data %}
-            <tr> 
-              <th scope="row"><a href="{% url 'start_project' i.id %}">{{i.name}}</a></td>
+            <tr>
+              {% if i.status %}
+                <th scope="row"><a href="{% url 'start_project' i.id %}">{{i.name}}</a></td>
+              {% else %}
+                <th scope="row"><p>{{i.name}}</p></td>
+              {% endif %}
               <td>{{i.date|date:'d.m.y'}}</td>
               <td>{{i.status}}</td>
               <th scope="row"><a href="{% url 'delete_project' i.id %}">Удалить</a></td>
