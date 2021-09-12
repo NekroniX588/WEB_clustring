@@ -2,6 +2,7 @@ from .models import Projects
 
 from django import forms
 from django.forms import Textarea
+from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 
@@ -42,3 +43,12 @@ class ProjectsForm(forms.ModelForm):
 		super().__init__(*args, **kwargs)
 		for field in self.fields:
 			self.fields[field].widget.attrs['class'] = 'form-control'
+
+	def clean_attach(self):
+		attach = self.cleaned_data.get('attach', False)
+		if attach:
+			if attach.size > 4*1024*1024:
+				raise ValidationError("Attach file too large ( > 4mb )")
+			return attach
+		else:
+			raise ValidationError("Couldn't read uploaded attach")

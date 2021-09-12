@@ -58,11 +58,11 @@
       <hr/>
       <textarea name="text" class="form-control" id="exampleFormControlTextarea1" rows="15">{{data.comments}}</textarea>
       {% if data.stage == 1 or data.stage == 2 %}
-        <a href="{% url 'const_start' data.id %}">Далее</a>
+        <a href="{% url 'const_start' data.id %}" class='btn btn-success mt-4 mb-5'>Далее</a>
       {% elif data.stage == 3 %}
-        <a href="{% url 'clustering_start' data.id %}">Далее</a>
+        <a href="{% url 'clustering_start' data.id %}" class='btn btn-success mt-4 mb-5'>Далее</a>
       {% elif data.stage == 4 %}
-        <a href="{% url 'classification_start' data.id %}">Далее</a>
+        <a href="{% url 'classification_start' data.id %}" class='btn btn-success mt-4 mb-5'>Далее</a>
       {% endif %}
 
   	</div>

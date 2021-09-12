@@ -100,7 +100,7 @@
       <p><a href="{% url 'clear_log' data.id %}">Очистить лог</a></p>
       <hr/>
       <textarea name="text" class="form-control" id="exampleFormControlTextarea1" rows="10">{{data.comments}}</textarea>
-      <a href="{% url 'classification_start' data.id %}">Далее</a>
+      <a href="{% url 'classification_start' data.id %}" class='btn btn-success mt-4 mb-5'>Далее</a>
 
   	</div>
   {% endblock %}

@@ -6,6 +6,7 @@ from . import views
 
 urlpatterns = [
     path('', views.main, name='main'),
+    path('block/<int:pk>', views.block, name='block'),
     path('login', views.SpeechLoginView.as_view(), name='login'),
     path('register', views.SpeechRegisterView.as_view(), name='register'),
     path('logout', views.SpeechLogout.as_view(), name='logout'),

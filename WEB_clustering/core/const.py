@@ -63,7 +63,10 @@ class Const(object):
 		df -- data frame ['id', 'X1', 'X2', ..., 'Xn']
 		'''
 		self.config['norms'] = {}
-		need_names = [n for n in df.columns if n not in self.nameignore + ['id']] 
+		if 'ignore_coord' in self.config:
+			need_names = [n for n in df.columns if n not in self.nameignore + ['id']] + self.config['ignore_coord']
+		else:
+			need_names = [n for n in df.columns if n not in self.nameignore + ['id']]
 		df_for_norm = df[need_names]
 		X, norms = self.__normalize(df_for_norm.values, self.config['consts']['percent_for_norms'])
 		# print(X[:10])
@@ -76,7 +79,10 @@ class Const(object):
 
 	def pca_norm(self, df, coords):
 		self.config['norms'] = {}
-		need_names = [n for n in df.columns if n not in self.nameignore + ['id']] 
+		if 'ignore_coord' in self.config:
+			need_names = [n for n in df.columns if n not in self.nameignore + ['id']] + self.config['ignore_coord']
+		else:
+			need_names = [n for n in df.columns if n not in self.nameignore + ['id']]
 		df_for_norm = df[need_names]
 		X, norms = self.__normalize(df_for_norm.values, self.config['consts']['percent_for_norms'])
 		# print(X[:10])
@@ -113,6 +119,14 @@ class Const(object):
 			return 
 		else:
 			return self.config['norms']
+
+	def inverse_norm(self, df):
+		if 'norms' not in self.config:
+			return df
+		for key in self.config['norms']:
+			df[key] *= self.config['norms'][key]
+
+		return df
 
 	def f_statistic(self, df, num_of_intervals=10):
 		text = ''

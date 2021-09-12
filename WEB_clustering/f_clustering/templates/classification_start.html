@@ -29,6 +29,7 @@
         <p class="nav-link {% if classification_start == request.path %} active {% endif %}" href="{% url 'classification_start' data.id %}">Классификация</p>
         {% endif %}
       </li>
+    </ul>
 
 
   	<div class="container">
@@ -63,13 +64,12 @@
           {% endfor %}
         </select></p>
       </form>
-      <p><button form="save" type="submit" class="btn btn-primary mt-4">Классификировать</button></p>
+      <p><button form="save" type="submit" class="btn btn-primary mt-4">Классифицировать</button></p>
 
       <hr/>
       <p><a href="{% url 'clear_log' data.id %}">Очистить лог</a></p>
       <hr/>
-      <textarea name="text" class="form-control" id="exampleFormControlTextarea1" rows="15">{{data.comments}}</textarea>
-      <a href="">Далее</a>
+      <textarea name="text" class="form-control mb-5" id="exampleFormControlTextarea1" rows="15">{{data.comments}}</textarea>
 
   	</div>
   {% endblock %}

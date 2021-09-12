@@ -37,10 +37,12 @@ LOGGING = False
 reader = Reader()
 
 def main(request):
-	context = {
-	}
-	template = 'main_page.html'
-	return render(request, template, context)
+	return redirect(reverse('block', args=(1, )))
+
+def block(request, pk):
+	template = 'block' + str(pk) + '.html'
+	print(template)
+	return render(request, template, {})
 
 class SpeechLoginView(LoginView):
 	template_name = 'login.html'
@@ -322,9 +324,9 @@ def const_start(request,pk):
 		for col in df.columns:
 			if 'X' in col:
 				if col in const.nameignore:
-					need_columns.append([col, True])
-				else:
 					need_columns.append([col, False])
+				else:
+					need_columns.append([col, True])
 
 		context = {
 			'const_status': const.status,
@@ -342,10 +344,15 @@ def const_start(request,pk):
 	elif request.method =='POST':
 		data = Projects.objects.get(pk=pk)
 		const = Const('./settings/'+data.settings.url)
+		df = reader.read('./df/'+data.attach.url)
 
 		calulate_with_started_a = None
 
-		const.config['ignore_coord'] = request.POST.getlist('need_coords')
+		const.config['ignore_coord'] = []
+		for col in df.columns:
+			if col not in request.POST.getlist('need_coords') and 'X' in col:
+				const.config['ignore_coord'].append(col)
+
 		for domen in const.config:
 			if domen == 'ignore_coord':
 				continue
@@ -445,6 +452,8 @@ def calculate_a(request, pk, type_optimization):
 
 def const_reload(request, pk):
 	data = Projects.objects.get(pk=pk)
+	data.stage = 2
+	data.save()
 	const = Const('./settings/'+data.settings.url)
 	const_clear = Const('./settings.yaml')
 	for major_key in const_clear.config:
@@ -562,14 +571,15 @@ def classification_start(request, pk):
 		for col in df.columns:
 			if 'X' in col:
 				if col in const.nameignore:
-					need_columns.append([col, True])
-				else:
 					need_columns.append([col, False])
+				else:
+					need_columns.append([col, True])
 
-		other_project = []
-		for projct in all_projects:
-			if projct.pk != pk:
-				other_project.append(projct)
+		other_project = all_projects
+		# other_project = []
+		# for projct in all_projects:
+		# 	if projct.pk != pk:
+		# 		other_project.append(projct)
 		context = {
 			'columns': need_columns,
 			'data': data,
@@ -598,25 +608,32 @@ def classification(request, pk):
 			data.save()
 			return redirect(reverse('classification_start', args=(pk, )))
 
+		check_self = False
 		pk_test = int(pk_test)
 
+		if pk_test == pk:
+			check_self = True
 		data = Projects.objects.get(pk=pk)
 		const = Const('./settings/'+data.settings.url)
 		df_train = reader.read('./df/'+data.attach.url)
 
 		data_test = Projects.objects.get(pk=pk_test)
 		df_test = reader.read('./df/'+data_test.attach.url)
+		print(df_test.head())
+		const_test = Const('./settings/'+data_test.settings.url)
+		df_test = const_test.inverse_norm(df_test)
+		print(df_test.head())
+
 
 		classifier = Classsifier(const.config)
-
-		print(data.pca)
 		if data.pca:
-			df_test, text = classifier.predict(df_train, df_test, './pcas/'+data.pca.url)
+			df_test, text = classifier.predict(df_train, df_test, './pcas/'+data.pca.url, check_self)
 		else:
-			df_test, text = classifier.predict(df_train, df_test, None)
+			df_test, text = classifier.predict(df_train, df_test, None, check_self)
 		
 		
 		data.comments += text
+		data.comments += "Проведена классификация\n"
 		data.save()
 
 		with io.BytesIO() as b:

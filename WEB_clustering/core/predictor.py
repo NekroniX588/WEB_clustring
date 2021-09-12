@@ -53,7 +53,7 @@ class Classsifier():
         df_train[pca_coord] = X
         return df_train
 
-    def predict(self, df_train, df_predict, pca_path):
+    def predict(self, df_train, df_predict, pca_path, check_self=False):
         text = ''
         names_ouput = list(df_train)[1:]#Выделяем все имена из обучающих данных  
         names_input = list(df_predict)[1:]#Выделяем все имена из данных для предсказания
@@ -69,7 +69,6 @@ class Classsifier():
             text += 'Нет общих координат\n'#Если нет общих координат, то прерываем программу
             return df_predict
         
-        print(len(needed_pca_names))
         if len(needed_pca_names)>0:
             df_train = self.__inverse_transform(df_train, pca_path)
 
@@ -77,7 +76,8 @@ class Classsifier():
 
         df_train = df_train[needed_names+nameignore] # Выделяем необходимые имена
         df_predict = df_predict[needed_names] # Выделяем необходимые имена
-        df_predict = self.__norm(df_predict) #Нормируем данные
+        if not check_self:
+            df_predict = self.__norm(df_predict) #Нормируем данные
 
         inputs = df_predict.iloc[:].values
         #Работа с ребрами
@@ -111,5 +111,5 @@ class Classsifier():
                 df_predict[name] = F
                 # df_predict.loc[:,name]= F
         else:
-            text += 'Wrong format of data\n'
+            text += 'Неверный формат данных\n'
         return df_predict, text

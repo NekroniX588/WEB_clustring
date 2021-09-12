@@ -5,7 +5,7 @@ from django.core.files.storage import FileSystemStorage
 
 class Projects(models.Model):
 	author = models.ForeignKey(User, on_delete = models.CASCADE, verbose_name='Автор', blank=True, null=True)
-	date = models.DateTimeField(auto_now=True)
+	date = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=200, verbose_name='Название')
 	stage = models.IntegerField(default=0)
 	status = models.BooleanField(verbose_name='Готово', default=False)
