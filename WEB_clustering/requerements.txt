@@ -1,0 +1,4 @@
+Django==3.1.7
+yaml
+scikit-learn==0.24.1
+PyYAML==5.4.1
