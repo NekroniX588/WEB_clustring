@@ -2,6 +2,7 @@ import os
 import datetime
 import math
 import yaml
+import pickle
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
@@ -125,6 +126,46 @@ class Const(object):
 			return df
 		for key in self.config['norms']:
 			df[key] *= self.config['norms'][key]
+
+		return df
+
+	def inverse_pca_norm(self, df, pca_path):
+		if 'norms' not in self.config:
+			return df
+
+		pca_coord = []
+		pca_norm = []
+		original_cood = []
+		original_norm = []
+
+		ordinaty_norm = []
+		ordinaty_coord = []
+		for name in self.config['norms']:
+			if 'original' not in name and name+'_original' in self.config['norms']:
+				pca_coord.append(name)
+				pca_norm.append(self.config['norms'][name])
+				original_cood.append(name+'_original')
+				original_norm.append(self.config['norms'][name+'_original'])
+			if 'original' not in name and name+'_original' not in self.config['norms']:
+				ordinaty_coord.append(name)
+				ordinaty_norm.append(self.config['norms'][name])
+
+		#Переводим PCA координаты в обычные
+		X = df[pca_coord].values
+		for i in range(len(pca_norm)):
+			X[:,i] *= pca_norm[i]
+
+		#Загружаем PCA
+		with open(pca_path, "rb") as f:
+			pca = pickle.load(f)
+
+		#РеPCA
+		X = pca.inverse_transform(X)
+
+		df[pca_coord] = X
+		#нормируем на оригиналы
+		for i in range(len(ordinaty_coord)):
+			df[ordinaty_coord[i]] *= ordinaty_norm[i]
 
 		return df
 

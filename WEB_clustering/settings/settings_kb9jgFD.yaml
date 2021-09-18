@@ -1,0 +1,39 @@
+conturs: # разбиение на контуры
+  min_points: 30
+  contour_points: 50 # const2
+  min_diff: 1 # const3
+  num_of_lenghts: 4 # const4
+ 
+isolated_cluster: # Первые этап - получение изолированных кластеров
+  constU1: 0.05
+  min_len: 0.5
+  min_dif: 1
+  divider: 2
+  max_div_num: 8
+  merge_threshold: 1 #Константа разницы Ф для мерджинга
+
+subcluster:
+  Steps: 10
+  Max_persent: 90
+  max_key_points: 5
+
+knots: # Для разметки узлов
+  min_fuses_num: 15
+  stop_const: 1
+
+consts:
+  percent_for_norms: 40 #Процент для нормировки
+  percent_of_zeros: 0.5
+  round_const: 5 #Количество знаков после запятой
+  const: 0.25 # Начальная констана
+  percent_X: 5 # X% матрицы расстояний
+  down_steps: 3 #
+  up_steps: 3
+  max_depth: 10
+  power_koef: 1.16
+  percent_Y: 33 #Процент для простого варианта
+  threshold: 0.8 # Процент для сложного варианта
+  Y_step: 2.5
+  w: 8
+  U: 90
+  cluster_importancy: 0.5

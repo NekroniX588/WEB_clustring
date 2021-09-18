@@ -348,6 +348,10 @@ def const_start(request,pk):
 
 		calulate_with_started_a = None
 
+		if len(request.POST.getlist('need_coords')) == 0:
+			messages.error(request, 'Должна быть выбрана хотябы 1 координата')
+			return redirect(reverse('const_start', args=(pk, )))
+
 		const.config['ignore_coord'] = []
 		for col in df.columns:
 			if col not in request.POST.getlist('need_coords') and 'X' in col:
@@ -611,29 +615,30 @@ def classification(request, pk):
 		check_self = False
 		pk_test = int(pk_test)
 
-		if pk_test == pk:
-			check_self = True
+		# if pk_test == pk:
+		# 	check_self = True
 		data = Projects.objects.get(pk=pk)
 		const = Const('./settings/'+data.settings.url)
 		df_train = reader.read('./df/'+data.attach.url)
 
 		data_test = Projects.objects.get(pk=pk_test)
 		df_test = reader.read('./df/'+data_test.attach.url)
-		print(df_test.head())
 		const_test = Const('./settings/'+data_test.settings.url)
-		df_test = const_test.inverse_norm(df_test)
-		print(df_test.head())
+		if data_test.pca:
+			df_test = const_test.inverse_pca_norm(df_test, './pcas/'+data_test.pca.url)
+		else:
+			df_test = const_test.inverse_norm(df_test)
 
+		print(df_test.head())
 
 		classifier = Classsifier(const.config)
 		if data.pca:
-			df_test, text = classifier.predict(df_train, df_test, './pcas/'+data.pca.url, check_self)
+			df_test, text = classifier.predict(df_train, df_test, './pcas/'+data.pca.url)
 		else:
-			df_test, text = classifier.predict(df_train, df_test, None, check_self)
+			df_test, text = classifier.predict(df_train, df_test, None)
 		
 		
 		data.comments += text
-		data.comments += "Проведена классификация\n"
 		data.save()
 
 		with io.BytesIO() as b:

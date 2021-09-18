@@ -33,6 +33,11 @@
 
 
     <div class="container">
+
+      <hr/>
+      <h5>Название проекта: {{data.name}} Имя файла: {{data.attach.name}}</h5>
+      <hr/>
+
       <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
       <hr/>
 
@@ -117,7 +122,7 @@
     <hr/>
     <textarea name="text" class="form-control" id="exampleFormControlTextarea1" rows="10">{{data.comments}}</textarea>
     {% if settings.consts.a %}
-      <a href="{% url 'clustering_start' data.id %}">Далее</a>
+      <a href="{% url 'clustering_start' data.id %}" class='btn btn-success mt-4 mb-5'>Далее</a>
     {% endif %}
   </div>
   {% endblock %}

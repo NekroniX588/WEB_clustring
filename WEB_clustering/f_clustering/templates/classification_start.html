@@ -34,6 +34,10 @@
 
   	<div class="container">
 
+      <hr/>
+      <h5>Название проекта: {{data.name}} Имя файла: {{data.attach.name}}</h5>
+      <hr/>
+
       <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
       <hr/>
       
@@ -55,6 +59,8 @@
         {% endfor %}
 
       </form>
+
+      <h3>Выберите данные для классификации</h1>
 
       <form action="{% url 'classification' data.id %}" method="post" id="save">
         {% csrf_token %}

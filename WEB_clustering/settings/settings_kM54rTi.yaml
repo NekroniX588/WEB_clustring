@@ -1,0 +1,45 @@
+consts:
+  U: 90
+  Y_step: 2.5
+  cluster_importancy: 0.5
+  const: 0.25
+  down_steps: 3
+  max_depth: 10
+  percent_X: 5
+  percent_Y: 33
+  percent_for_norms: 40
+  percent_of_zeros: 0.5
+  power_koef: 1.16
+  round_const: 5
+  threshold: 0.8
+  up_steps: 3
+  w: 8
+conturs:
+  contour_points: 50
+  min_diff: 1
+  min_points: 30
+  num_of_lenghts: 4
+isolated_cluster:
+  constU1: 0.05
+  divider: 2
+  max_div_num: 8
+  merge_threshold: 1
+  min_dif: 1
+  min_len: 0.5
+knots:
+  min_fuses_num: 15
+  stop_const: 1
+norms:
+  X1: 26.90131
+  X1_original: 0.12333
+  X2: 25.7495
+  X2_original: 0.45634
+  X3: 0.42503
+  X3_original: 62.059
+  X4: 0.08411
+  X4_original: 26.93686
+  X5: 17.45197
+subcluster:
+  Max_persent: 90
+  Steps: 10
+  max_key_points: 5

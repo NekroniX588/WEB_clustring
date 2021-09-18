@@ -47,8 +47,8 @@ class ProjectsForm(forms.ModelForm):
 	def clean_attach(self):
 		attach = self.cleaned_data.get('attach', False)
 		if attach:
-			if attach.size > 4*1024*1024:
-				raise ValidationError("Attach file too large ( > 4mb )")
+			if attach.size > 1*1024*1024:
+				raise ValidationError("Attach file too large ( > 1mb )")
 			return attach
 		else:
 			raise ValidationError("Couldn't read uploaded attach")

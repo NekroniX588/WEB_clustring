@@ -76,9 +76,9 @@ class Reader(object):
 		'''
 		if df.shape[0] < 10 or df.shape[0] > 2000:
 			return False
-		if df.shape[1] > 53:
-			return False
 		coords_nums = [int(col_name[1:]) for col_name in df.columns if col_name not in self.nameignore]
+		if len(coords_nums) > 50:
+			return False
 		#Add information ('F', Cluster_Id, Subcluster)
 		is_asc = coords_nums == sorted(coords_nums)
 		if is_asc == False:

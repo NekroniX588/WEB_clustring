@@ -67,7 +67,7 @@ class Classsifier():
 
         if len(needed_names)==1:
             text += 'Нет общих координат\n'#Если нет общих координат, то прерываем программу
-            return df_predict
+            return df_predict, text
         
         if len(needed_pca_names)>0:
             df_train = self.__inverse_transform(df_train, pca_path)
@@ -76,8 +76,8 @@ class Classsifier():
 
         df_train = df_train[needed_names+nameignore] # Выделяем необходимые имена
         df_predict = df_predict[needed_names] # Выделяем необходимые имена
-        if not check_self:
-            df_predict = self.__norm(df_predict) #Нормируем данные
+        # if not check_self:
+        df_predict = self.__norm(df_predict) #Нормируем данные
 
         inputs = df_predict.iloc[:].values
         #Работа с ребрами
@@ -91,6 +91,7 @@ class Classsifier():
                     for line in inputs:
                         F.append(get_F_example(time_dfs[needed_names].iloc[:].values, self.config['consts']['a'], line, self.config['consts']['cluster_importancy'])) #Вычисляем F для каждой строки данных для предсказания
                     df_predict[name] = F
+                text += "Проведена классификация\n"
                     # df_predict.loc[:,name]= F
         elif 'cluster_id' in df_train.columns:
             for cluster in sorted(df_train['cluster_id'].unique()): #проходим все кластеры
@@ -100,6 +101,7 @@ class Classsifier():
                 for line in inputs:
                     F.append(get_F_example(time_df[needed_names].values, self.config['consts']['a'], line, self.config['consts']['cluster_importancy'])) #Вычисляем F для каждой строки данных для предсказания
                 df_predict[name] = F
+            text += "Проведена классификация\n"
                 # df_predict.loc[:,name]= F
         elif 'subcluster_id' in df_train.columns:
             for subcluster in sorted(df_train['subcluster_id'].unique()): #проходим все сабкластеры
@@ -110,6 +112,7 @@ class Classsifier():
                     F.append(get_F_example(time_df[needed_names].values, self.config['consts']['a'], line, self.config['consts']['cluster_importancy'])) #Вычисляем F для каждой строки данных для предсказания
                 df_predict[name] = F
                 # df_predict.loc[:,name]= F
+            text += "Проведена классификация\n"
         else:
             text += 'Неверный формат данных\n'
         return df_predict, text
