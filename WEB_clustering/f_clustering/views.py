@@ -94,7 +94,7 @@ class SpeechProjectsCreate(CreateView): # новый
 		self.object.stage = 1
 		self.object.save()
 
-		df, text = reader.read('./df/'+self.object.attach.url)
+		df, text = reader.read('./df/'+self.object.attach.url, first_open = True)
 		if df is not None:
 			self.object.status = True
 		else:
