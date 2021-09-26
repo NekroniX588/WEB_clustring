@@ -45,7 +45,7 @@ class Reader(object):
 		df_train, df_test = train_test_split(df, train_size=train_size/100, shuffle=shuffle)
 		return df_train, df_test
 
-	def read(self, file_path):
+	def read(self, file_path, first_open = False):
 		'''
 		args:
 		file_path -- path to the file
@@ -54,6 +54,7 @@ class Reader(object):
 		dataframe if format is correct
 		None otherwise
 		'''
+
 		file_extension = file_path.split('.')[-1]
 		if file_extension == 'csv':
 			try:
@@ -68,10 +69,13 @@ class Reader(object):
 		else:
 			return None, "Неверное расширение файла"
 
-		if self.is_valid(in_df)[0]:
-			return in_df, self.is_valid(in_df)[1]
+		if first_open:
+			if self.is_valid(in_df)[0]:
+				return in_df, self.is_valid(in_df)[1]
+			else:
+				return None, self.is_valid(in_df)[1]
 		else:
-			return None, self.is_valid(in_df)[1]
+			return in_df
 
 	def is_valid(self, df):
 		'''

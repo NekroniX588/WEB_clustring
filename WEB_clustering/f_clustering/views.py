@@ -32,7 +32,7 @@ from django.contrib import messages
 from django.core.files.base import ContentFile
 # Create your views here.
 
-LOGGING = False
+LOGGING = True
 
 reader = Reader()
 
@@ -80,7 +80,7 @@ class SpeechProjectsCreate(CreateView): # новый
 	template_name = 'projects_add.html'
 	success_url = reverse_lazy('projects')
 	def form_valid(self, form):
-		
+
 		if Projects.objects.filter(name= form.cleaned_data["name"], author = self.request.user).count() > 0:
 			messages.error(self.request, "Проект с данным названием уже присутствует")
 			return super().form_valid(form)
