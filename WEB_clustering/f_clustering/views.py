@@ -32,7 +32,7 @@ from django.contrib import messages
 from django.core.files.base import ContentFile
 # Create your views here.
 
-LOGGING = True
+LOGGING = False
 
 reader = Reader()
 
