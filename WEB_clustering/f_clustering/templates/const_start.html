@@ -1,7 +1,7 @@
 {% extends 'main.html' %}
 
   {% block content %}
-    
+
     {% load f_extras %}
 
   	<ul class="nav nav-pills justify-content-center">
@@ -35,7 +35,8 @@
   	<div class="container">
 
       <hr/>
-      <h5>Название проекта: {{data.name}} Имя файла: {{data.attach.name}}</h5>
+      <h5>Название проекта: {{data.name}}</h5>
+      <h5>Имя файла: {{data.attach.name}}</h5>
       <hr/>
 
       <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
@@ -147,21 +148,21 @@
 
             <p title='это среднее расстояние (средний вес ребра) полученное от минимальных-прилегающих для  каждой из  contour_points'>num_of_lenghts
             <input name="num_of_lenghts" type="number" step="1" min="1" value={{settings.conturs.num_of_lenghts}}></p>
-            
+
             {% if settings.conturs.min_diff|length > 0 %}
-              <p title=' это дополнительный критерий нахождения уровней на которых контуры рассчитываем  - с одной стороны , мы шагаем через каждые х штук min_points, 
+              <p title=' это дополнительный критерий нахождения уровней на которых контуры рассчитываем  - с одной стороны , мы шагаем через каждые х штук min_points,
   а с другой имеем условие, что  разность Ф  между соседними контурами не должна быть выше min_diff  -т.е, даже если  точек и меньше,
   чем =min_points  мы в таких случаях все равно контур должны рассчитать.'>min_diff</p>
               <p><input name="min_diff_0" type="number" step="any" value={{settings.conturs.min_diff.0}}></p>
               <p><input name="min_diff_1" type="number" step="any" value={{settings.conturs.min_diff.1}}></p>
             {% else %}
-              <p title=' это дополнительный критерий нахождения уровней на которых контуры рассчитываем  - с одной стороны , мы шагаем через каждые х штук min_points, 
+              <p title=' это дополнительный критерий нахождения уровней на которых контуры рассчитываем  - с одной стороны , мы шагаем через каждые х штук min_points,
   а с другой имеем условие, что  разность Ф  между соседними контурами не должна быть выше min_diff  -т.е, даже если  точек и меньше,
   чем =min_points  мы в таких случаях все равно контур должны рассчитать.'>min_diff
               <input name="min_diff" type="number" step="any" value={{settings.conturs.min_diff}}></p>
             {% endif %}
-          
-        
+
+
           <h3>Кластеризация</h3>
             <p title='коэф-т на который умножаем контур и если расстояния между двумя точками меньше чем контур*constU1  то Профиль не проводим'>constU1
             <input name="constU1" type="number" step="any" value={{settings.isolated_cluster.constU1}}></p>

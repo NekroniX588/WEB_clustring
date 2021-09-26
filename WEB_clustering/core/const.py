@@ -6,7 +6,6 @@ import pickle
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt 
 from core.utils import get_F, get_F_example
 
 from sklearn.metrics import pairwise_distances
@@ -71,7 +70,7 @@ class Const(object):
 		df_for_norm = df[need_names]
 		X, norms = self.__normalize(df_for_norm.values, self.config['consts']['percent_for_norms'])
 		# print(X[:10])
-		
+
 		for i, col in enumerate(df_for_norm.columns[:]):
 			self.config['norms'][col] = float(np.round(norms[i], self.config['consts']['round_const']))
 		print(self.config)
@@ -87,7 +86,7 @@ class Const(object):
 		df_for_norm = df[need_names]
 		X, norms = self.__normalize(df_for_norm.values, self.config['consts']['percent_for_norms'])
 		# print(X[:10])
-		
+
 		need_for_pca = []
 		pca_names = []
 		for i, col in enumerate(df_for_norm.columns[:]):
@@ -117,7 +116,7 @@ class Const(object):
 	def get_norms(self):
 		if len(self.config['norms'])==0:
 			print("Norms is not calculated. Maybe you don't normalize training data")
-			return 
+			return
 		else:
 			return self.config['norms']
 
@@ -249,9 +248,9 @@ class Const(object):
 		df -- data frame ['id', 'X1', 'X2', ..., 'Xn']
 		'''
 		if self.status == False and not force:
-			print("Const a is not calculated yet. F can't be calculated") 
+			print("Const a is not calculated yet. F can't be calculated")
 			return
-		need_names = [n for n in df.columns if n not in self.nameignore] 
+		need_names = [n for n in df.columns if n not in self.nameignore]
 		X = df[need_names].values
 		df['F'] =  np.array(get_F_example(X, self.config['consts']['a']))[:,-1]
 
@@ -259,26 +258,26 @@ class Const(object):
 	def __calculate_weights_by_max(self, X_percent_matrix, X, started_a):
 
 		first = True# задаем флаг для первого нахождения a и средней суммы весов
-		
+
 		#Создаем список, где 0 (т.е. started) a будет стоять в начале
 		var = [i for i in range(-self.config['consts']['down_steps'],self.config['consts']['up_steps']+1)]
 		var.pop(var.index(0))
 		list_for_k = [0] + var
 
 		for k in tqdm(list_for_k):# задаем цикл диапазона [-down_steps:up_steps]
-			
+
 			a =  started_a * (self.config['consts']['power_koef']**k)#Вычисляем текущее значение а
-			
+
 			F = get_F_example(X, a)#Вычисляем F для матрицы (!!!ВНИМАНИЕ ФОРМУЛА!!!) [id, X1,..,Xn, F]
 
 			def F_sort(arr):#Вспомогательная функция для сортировки
 				return arr[-1]
 			F.sort(key=F_sort,reverse = True)#Сортируем F по убыванию
-			
+
 			# Выбираем Y% матрицы
 			lenght = int(np.round(len(F)*self.config['consts']['percent_Y']/100, 0))
 			Y_percent_matrix = np.array(F[:lenght])
-			
+
 			#Высчитываем сумму ребер
 			summ = 0
 			for edge in X_percent_matrix:# Проходим построчно матрицу X% - row = [id вершины 1, id вершины 2, расстояние]
@@ -304,13 +303,13 @@ class Const(object):
 		list_a = [] #Создаем список для хранения всех а
 		list_Y_percent = [] #Создаем список для хранения всех Y% при которых средняя сумма больше порога
 		list_summ_edge = [] #Создаем список для хранения всех средних сумм, которые впервые превысили порог
-		
+
 		arr_Y_step = [] # задаем массив шагов по Y%
 		current = self.config['consts']['Y_step'] #Устанавлиаем первое значение как шаг по Y%
 
-		while current < 100: #Пока текущее значение процента не превышает 100% 
+		while current < 100: #Пока текущее значение процента не превышает 100%
 			arr_Y_step.append(current) # Добавляем текущее значение в массив шагов по Y%
-			current += self.config['consts']['Y_step'] # Прибавляем к текущему значению шаг 
+			current += self.config['consts']['Y_step'] # Прибавляем к текущему значению шаг
 		if arr_Y_step[-1]<100: #Для случая если шаг 100/Y_step не целое (например Y_step=3%), то добавляем в конец массивf шагов по Y% 100%
 			arr_Y_step.append(100)
 
@@ -325,15 +324,15 @@ class Const(object):
 
 			list_a.append(a)#Добавляем текущее значение а в список для хранения всех а
 
-			
+
 			F = get_F_example(X, a) #Вычисляем F для матрицы (!!!ВНИМАНИЕ ФОРМУЛА!!!) [id, X1,..,Xn, F]
-			
+
 			def F_sort(arr):#Вспомогательная функция для сортировки
 				return arr[-1]
 			F.sort(key=F_sort,reverse = True)#Сортируем F по убыванию
 
 			for step in arr_Y_step:#Итерируемся по матрице шагов Y%
-				
+
 				# Выбираем текущий Y% матрицы
 				lenght = max(int(np.round(len(F)*step/100, 0)),1)
 				Y_percent_matrix = np.array(F[:lenght])
@@ -353,7 +352,7 @@ class Const(object):
 
 		#Задаем начальные значения как 0 элементы списков
 		# print(list_Y_percent)
-		min_Y_percent = list_Y_percent[0] 
+		min_Y_percent = list_Y_percent[0]
 		max_summ_edge = list_summ_edge[0]
 		max_a = list_a[0]
 		for i in range(1, len(list_Y_percent)):
@@ -369,13 +368,13 @@ class Const(object):
 		landscape = {}
 		list_a = [] #Создаем список для хранения всех а
 		list_summ_edge = [] #Создаем список для хранения всех средних сумм
-		
+
 		arr_Y_step = [] # задаем массив шагов по Y%
 		current = self.config['consts']['Y_step'] #Устанавлиаем первое значение как шаг по Y%
 
-		while current < 100: #Пока текущее значение процента не превышает 100% 
+		while current < 100: #Пока текущее значение процента не превышает 100%
 			arr_Y_step.append(current) # Добавляем текущее значение в массив шагов по Y%
-			current += self.config['consts']['Y_step'] # Прибавляем к текущему значению шаг 
+			current += self.config['consts']['Y_step'] # Прибавляем к текущему значению шаг
 		if arr_Y_step[-1]<100: #Для случая если шаг 100/Y_step не целое (например Y_step=3%), то добавляем в конец массивf шагов по Y% 100%
 			arr_Y_step.append(100)
 
@@ -391,13 +390,13 @@ class Const(object):
 			list_a.append(a)#Добавляем текущее значение а в список для хранения всех а
 
 			F = get_F_example(X, a) #Вычисляем F для матрицы (!!!ВНИМАНИЕ ФОРМУЛА!!!) [id, X1,..,Xn, F]
-			
+
 			def F_sort(arr):#Вспомогательная функция для сортировки
 				return arr[-1]
 			F.sort(key=F_sort,reverse = True)#Сортируем F по убыванию
 
 			for i, step in enumerate(arr_Y_step):#Итерируемся по матрице шагов Y%
-				
+
 				# Выбираем текущий Y% матрицы
 				lenght = max(int(np.round(len(F)*step/100, 0)),1)
 				Y_percent_matrix = np.array(F[:lenght])
@@ -425,15 +424,15 @@ class Const(object):
 		return max_a, landscape
 
 	def __one_step_integral_Y(self, X_percent_matrix, arr_Y_step, X, a):
-		
+
 		F = get_F_example(X, a) #Вычисляем F для матрицы (!!!ВНИМАНИЕ ФОРМУЛА!!!) [id, X1,..,Xn, F]
-		
+
 		def F_sort(arr):#Вспомогательная функция для сортировки
 			return arr[-1]
 		F.sort(key=F_sort,reverse = True)#Сортируем F по убыванию
 
 		for i, step in enumerate(arr_Y_step):#Итерируемся по матрице шагов Y%
-			
+
 			# Выбираем текущий Y% матрицы
 			lenght = max(int(np.round(len(F)*step/100, 0)),1)
 			Y_percent_matrix = np.array(F[:lenght])
@@ -449,7 +448,7 @@ class Const(object):
 				summ_edge = summ/len(X_percent_matrix)#Добаляем среднюю сумму в список для хранения всех средних сумм
 			else:
 				summ_edge += summ/len(X_percent_matrix)
-				
+
 		return summ_edge
 
 	def __calculate_window(self, X_percent_matrix, arr_Y_step, X, started_a, landscape, start_step, total_steps):
@@ -515,9 +514,9 @@ class Const(object):
 		arr_Y_step = [] # задаем массив шагов по Y%
 		current = self.config['consts']['Y_step'] #Устанавлиаем первое значение как шаг по Y%
 
-		while current < 100: #Пока текущее значение процента не превышает 100% 
+		while current < 100: #Пока текущее значение процента не превышает 100%
 			arr_Y_step.append(current) # Добавляем текущее значение в массив шагов по Y%
-			current += self.config['consts']['Y_step'] # Прибавляем к текущему значению шаг 
+			current += self.config['consts']['Y_step'] # Прибавляем к текущему значению шаг
 		if arr_Y_step[-1]<100: #Для случая если шаг 100/Y_step не целое (например Y_step=3%), то добавляем в конец массивf шагов по Y% 100%
 			arr_Y_step.append(100)
 
@@ -672,7 +671,7 @@ class Const(object):
 					F_dif.append(self.get_profile(F,current_points[i],current_points[j], logging_save = logging_save))
 					done.add(name)
 					done.add(name[::-1])
-					
+
 		F_dif_good = []
 		for item in F_dif:
 			if item is not None and item>0:
@@ -779,20 +778,20 @@ class Const(object):
 			max_a, landscape = self.__calculate_weights_by_integral_Y_direct(X_percent_matrix, X, started_a, logging_save = logging_save)
 		#На выходе получаем 2 значения (коэффициент a, и среднее значение весов)
 		# if logging_save:
-		# 	X = []
-		# 	Y = []
-		# 	for x,y in sorted(list(landscape.items()), key=lambda x: x[0]):
-		# 		X.append(x)
-		# 		Y.append(y)
+		#   X = []
+		#   Y = []
+		#   for x,y in sorted(list(landscape.items()), key=lambda x: x[0]):
+		#       X.append(x)
+		#       Y.append(y)
 
-		
-		# 	if os.path.isfile('landscape.png'):
-		# 		os.remove('landscape.png')   # Opt.: os.system("rm "+strFile)
-		# 	plt.plot(X, Y)
-		# 	plt.ylabel('Result value')
-		# 	plt.xlabel('Step')
-		# 	plt.savefig('landscape.png', format='png')
-		# 	plt.clf()
+
+		#   if os.path.isfile('landscape.png'):
+		#       os.remove('landscape.png')   # Opt.: os.system("rm "+strFile)
+		#   plt.plot(X, Y)
+		#   plt.ylabel('Result value')
+		#   plt.xlabel('Step')
+		#   plt.savefig('landscape.png', format='png')
+		#   plt.clf()
 		return max_a
 
 	def calculate_a(self, df, type_of_optimization=2, max_a=None, logging_save = False):
@@ -811,12 +810,17 @@ class Const(object):
 			cluster_id = None
 			subcluster_id = None
 			if 'cluster_id' in df.columns:
+				text += 'В расчете констант не учитываются межкластерные ребра\n'
 				cluster_id = {item[0]:item[1] for item in df[['id','cluster_id']].values}
-				
+
 			if 'subcluster_id' in df.columns:
+				text += 'В рассчете констант не учитываются межсабкластерные ребра\n'
 				subcluster_id = {item[0]:item[1] for item in df[['id','subcluster_id']].values}
 
-			need_names = [n for n in df.columns if n not in self.nameignore] 
+			if cluster_id is not None or subcluster_id is not None:
+				text += 'РАСЧЕТ КОНСТАНТ ДЛЯ КЛАССИФИКАЦИИ\n'
+
+			need_names = [n for n in df.columns if n not in self.nameignore]
 			X = df[need_names].values#приводим их np.array [id, X1, X2]
 			max_a = self.__calculate_const(X, type_of_optimization, cluster_id, subcluster_id, logging_save = logging_save)
 		else:
@@ -844,11 +848,11 @@ class Const(object):
 		self.config['isolated_cluster']['min_dif'] = float(np.round(min_dif, self.config['consts']['round_const']))
 		self.config['isolated_cluster']['merge_threshold'] = float(np.round(1.5*min_dif, self.config['consts']['round_const']))
 		# value = 1./((max_a * self.config['conturs']['min_diff'][0])**2\
-		# 	+ max_a * self.config['conturs']['min_diff'][1])
+		#   + max_a * self.config['conturs']['min_diff'][1])
 		# self.config['conturs']['min_diff'] = float(np.round(value, self.config['consts']['round_const']))
 
 		# value = 1./((max_a * self.config['isolated_cluster']['min_dif'][0])**2\
-		# 	+ max_a * self.config['isolated_cluster']['min_dif'][1])
+		#   + max_a * self.config['isolated_cluster']['min_dif'][1])
 		# self.config['isolated_cluster']['min_dif'] = float(np.round(value, self.config['consts']['round_const']))
 		# self.status = True
 		text += 'Константы подсчитаны\n'

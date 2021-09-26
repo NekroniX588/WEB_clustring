@@ -34,7 +34,7 @@ class RegisterUserForm(forms.ModelForm):
 		return user
 
 class ProjectsForm(forms.ModelForm):
- 
+
 	class Meta:
 		model = Projects
 		fields = ['name', 'attach']
@@ -48,7 +48,7 @@ class ProjectsForm(forms.ModelForm):
 		attach = self.cleaned_data.get('attach', False)
 		if attach:
 			if attach.size > 1*1024*1024:
-				raise ValidationError("Attach file too large ( > 1mb )")
+				raise ValidationError("Прикрепеленный файл слишком большой ( > 1mb )")
 			return attach
 		else:
 			raise ValidationError("Couldn't read uploaded attach")

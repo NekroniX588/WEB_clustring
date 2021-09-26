@@ -1,7 +1,7 @@
 {% extends 'main.html' %}
 
   {% block content %}
-    
+
     {% load f_extras %}
 
   	<ul class="nav nav-pills justify-content-center">
@@ -35,12 +35,13 @@
   	<div class="container">
 
       <hr/>
-      <h5>Название проекта: {{data.name}} Имя файла: {{data.attach.name}}</h5>
+      <h5>Название проекта: {{data.name}}</h5>
+      <h5>Имя файла: {{data.attach.name}}</h5>
       <hr/>
 
       <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
       <hr/>
-      
+
       <p><a href="{% url 'download_data' data.id %}">Скачать данные</a></p>
       <hr/>
 

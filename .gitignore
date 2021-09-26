@@ -1,3 +1,8 @@
 **/.ipynb_checkpoints
 **/__pycache__ 
 *.log
+Data
+WEB_clustering/settings
+WEB_clustering/df
+WEB_clustering/pcas
+WEB_clustering/db.sqlite3

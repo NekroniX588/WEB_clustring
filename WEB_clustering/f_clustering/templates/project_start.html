@@ -32,7 +32,8 @@
   	<div class="container">
 
       <hr/>
-      <h5>Название проекта: {{data.name}} Имя файла: {{data.attach.name}}</h5>
+      <h5>Название проекта: {{data.name}}</h5>
+      <h5>Имя файла: {{data.attach.name}}</h5>
       <hr/>
 
       <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
@@ -56,7 +57,7 @@
         <p><button form="split" type="submit" class="btn btn-primary mt-1">Разделить</button></p>
       <hr/>
       {% endif %}
-      
+
       <hr/>
       <p><a href="{% url 'clear_log' data.id %}">Очистить лог</a></p>
       <hr/>

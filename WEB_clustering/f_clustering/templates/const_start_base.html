@@ -1,9 +1,9 @@
 {% extends 'main.html' %}
 
   {% block content %}
-    
+
     {% load f_extras %}
-    
+
     <ul class="nav nav-pills justify-content-center">
       <li class="nav-item">
         {% url 'start_project' data.id as start_project %}
@@ -35,7 +35,8 @@
     <div class="container">
 
       <hr/>
-      <h5>Название проекта: {{data.name}} Имя файла: {{data.attach.name}}</h5>
+      <h5>Название проекта: {{data.name}}</h5>
+      <h5>Имя файла: {{data.attach.name}}</h5>
       <hr/>
 
       <p><a href="{% url 'table' data.id %}">Посмотреть данные</a></p>
@@ -49,7 +50,7 @@
 
       <p><a href="{% url 'const_reload' data.id %}">Обнулисть костанты</a></p>
       <hr/>
-      
+
       <form action="{% url 'distance_statistic' data.id %}" method="post" id="statistic">
           {% csrf_token %}
           <p>Количество интервалов</p>

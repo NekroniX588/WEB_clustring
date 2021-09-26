@@ -1,4 +1,4 @@
-import os 
+import os
 import io
 import yaml
 import pandas as pd
@@ -63,7 +63,7 @@ class SpeechRegisterView(CreateView):
 		auth_user = authenticate(username=username, password=password)
 		login(self.request, auth_user)
 		return form_valid
-		
+
 class SpeechLogout(LogoutView):
 	next_page = reverse_lazy('main')
 
@@ -93,9 +93,9 @@ class SpeechProjectsCreate(CreateView): # новый
 		if df is not None:
 			self.object.status = True
 			# if 'cluster_id' in df.columns:
-			# 	del df['cluster_id']
+			#   del df['cluster_id']
 			# if 'subcluster_id' in df.columns:
-			# 	del df['subcluster_id']
+			#   del df['subcluster_id']
 			# reader.write(df, './df/'+self.object.attach.url)
 		else:
 			messages.error(self.request, 'Ошибка формата данных!!!')
@@ -164,7 +164,7 @@ def download_clusters(request, pk):
 	zip = zipfile.ZipFile(byte, "a")
 
 	for cluster in sorted(df['cluster_id'].unique()):
-		
+
 		data_byte = io.BytesIO()
 		df[df['cluster_id']==cluster].to_csv(data_byte, index=False)
 
@@ -185,7 +185,7 @@ def download_subclusters(request, pk):
 	zip = zipfile.ZipFile(byte, "a")
 
 	for cluster in sorted(df['subcluster_id'].unique()):
-		
+
 		data_byte = io.BytesIO()
 		df[df['subcluster_id']==cluster].to_csv(data_byte, index=False)
 
@@ -312,7 +312,7 @@ def project_start(request,pk):
 
 def const_start(request,pk):
 	if request.method =='GET':
-		
+
 		data = Projects.objects.get(pk=pk)
 		df = reader.read('./df/'+data.attach.url)
 		if data.stage<=2:
@@ -399,6 +399,9 @@ def calculate_norms(request, pk):
 	const.save_consts('./settings/'+data.settings.url)
 	reader.write(df, './df/'+data.attach.url)
 
+	data.comments += "Нормы подсчитаны\n"
+	data.save()
+
 	return redirect(reverse('const_start', args=(pk, )))
 
 def calculate_pca_norms(request, pk):
@@ -422,6 +425,10 @@ def calculate_pca_norms(request, pk):
 	elif request.method =='POST':
 		data = Projects.objects.get(pk=pk)
 		coords = request.POST.getlist('need_coords')
+
+		data.comments += "Применен метод главных компонент к координатам {}\n".format(' '.join(coords))
+		data.save()
+
 		if len(coords) < 2:
 			messages.error(request, 'Необходимо минимум 2 координаты для PCA')
 			return redirect(reverse('calculate_pca_norms', args=(pk, )))
@@ -437,6 +444,9 @@ def calculate_pca_norms(request, pk):
 		const.save_consts('./settings/'+data.settings.url)
 		reader.write(df, './df/'+data.attach.url)
 
+	data.comments += "Нормы подсчитаны\n"
+	data.save()
+
 	return redirect(reverse('const_start', args=(pk, )))
 
 def calculate_a(request, pk, type_optimization):
@@ -444,7 +454,7 @@ def calculate_a(request, pk, type_optimization):
 	df = reader.read('./df/'+data.attach.url)
 
 	const = Const('./settings/'+data.settings.url)
-	
+
 	reader.write(df, './df/'+data.attach.url)
 	text = const.calculate_a(df, type_optimization, logging_save=LOGGING)
 	data.comments += text
@@ -466,13 +476,15 @@ def const_reload(request, pk):
 	if 'a' in const.config['consts']:
 		const.config['consts'].pop('a')
 	const.save_consts('./settings/'+data.settings.url)
+	data.comments += 'КОНСТАНТЫ ОБНУЛЕНЫ\n'
+	data.save()
 	return redirect(reverse('const_start', args=(pk, )))
 
 def clustering_start(request,pk):
 	if request.method =='GET':
 		data = Projects.objects.get(pk=pk)
 		const = Const('./settings/'+data.settings.url)
-		
+
 		if data.stage<3:
 			data.stage = 3
 			data.save()
@@ -538,11 +550,11 @@ def compute_clustering(request, pk, type_c):
 	df = reader.read('./df/'+data.attach.url)
 	const = Const('./settings/'+data.settings.url)
 	if type_c == 1:
-		cluster = Clusters(const.config) 
+		cluster = Clusters(const.config)
 		df = cluster.get_isolated_clusters(df)
 		data.comments += 'Нашлось '+str(len(set(df['cluster_id'])))+' кластера\n'
 	elif type_c == 2:
-		fastcluster = Fast_Clusters(const.config) 
+		fastcluster = Fast_Clusters(const.config)
 		df = fastcluster.get_isolated_clusters(df, logging_save=LOGGING)
 		data.comments += 'Нашлось '+str(len(set(df['cluster_id'])))+' кластера\n'
 	elif type_c == 3:
@@ -582,8 +594,8 @@ def classification_start(request, pk):
 		other_project = all_projects
 		# other_project = []
 		# for projct in all_projects:
-		# 	if projct.pk != pk:
-		# 		other_project.append(projct)
+		#   if projct.pk != pk:
+		#       other_project.append(projct)
 		context = {
 			'columns': need_columns,
 			'data': data,
@@ -616,7 +628,7 @@ def classification(request, pk):
 		pk_test = int(pk_test)
 
 		# if pk_test == pk:
-		# 	check_self = True
+		#   check_self = True
 		data = Projects.objects.get(pk=pk)
 		const = Const('./settings/'+data.settings.url)
 		df_train = reader.read('./df/'+data.attach.url)
@@ -624,6 +636,8 @@ def classification(request, pk):
 		data_test = Projects.objects.get(pk=pk_test)
 		df_test = reader.read('./df/'+data_test.attach.url)
 		const_test = Const('./settings/'+data_test.settings.url)
+		data.comments += 'Начата классификация: трейновый проект = {}, классифицируемый проект = {} \n'.format(data.name, data_test.name)
+		data.save()
 		if data_test.pca:
 			df_test = const_test.inverse_pca_norm(df_test, './pcas/'+data_test.pca.url)
 		else:
@@ -636,8 +650,8 @@ def classification(request, pk):
 			df_test, text = classifier.predict(df_train, df_test, './pcas/'+data.pca.url)
 		else:
 			df_test, text = classifier.predict(df_train, df_test, None)
-		
-		
+
+
 		data.comments += text
 		data.save()
 
