@@ -126,7 +126,6 @@ class IMerger():
 			f_max_clus_1 = df[df['cluster_id']==dot1['cluster_id'].values[0]]['F'].max()
 			f_max_clus_2 = df[df['cluster_id']==dot2['cluster_id'].values[0]]['F'].max()
 			data.append({'p1':dot1.values[0,:], 'F_max_cluster1':f_max_clus_1, 'p2':dot2.values[0,:], 'F_max_cluster2':f_max_clus_2})
-
 		i = 0
 		while i<len(data):
 			for j in range(len(data)):
@@ -134,6 +133,9 @@ class IMerger():
 					data.pop(j)
 					break
 			i += 1
+		if logging_save:
+			for print_item in data:
+				write_log(str(print_item))
 
 		F = df.iloc[:].values[:,:-1]
 		F_matrix = np.full((num_clusters,num_clusters), np.inf)
@@ -152,12 +154,14 @@ class IMerger():
 			elif F_matrix[x, y] > delta:
 				F_matrix[x, y] = delta
 
+		if logging_save:
+			write_log(str(F_matrix))
+
 		while F_matrix.min()<self.config['isolated_cluster']['merge_threshold']:
 			self.__merge(F_matrix, num_clusters, df)
-		print(df['cluster_id'])
+
 		indexes = sorted(list(set(df['cluster_id'].values)))
 		index_map = {index:k for k,index in enumerate(indexes)}
-		print(index_map)
 		new_indexes = []
 		for inds in df['cluster_id'].values:
 			new_indexes.append(index_map[inds])

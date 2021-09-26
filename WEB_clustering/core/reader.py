@@ -56,42 +56,54 @@ class Reader(object):
 		'''
 		file_extension = file_path.split('.')[-1]
 		if file_extension == 'csv':
-			in_df = pd.read_csv(file_path) 
+			try:
+				in_df = pd.read_csv(file_path) 
+			except Exception as e:
+				return "Проблемы с файлом"
 		elif file_extension == 'xlsx' or file_extension == 'xls':
-			in_df = pd.read_excel(file_path) 
+			try:
+				in_df = pd.read_excel(file_path) 
+			except Exception as e:
+				return None, "Проблемы с файлом"
 		else:
-			print('Unsupported format')
-			return
+			return None, "Неверное расширение файла"
 
-		if self.is_valid(in_df):
-			return in_df
+		if self.is_valid(in_df)[0]:
+			return in_df, self.is_valid(in_df)[1]
 		else:
-			print('Unsupported format of file')
-			return
+			return None, self.is_valid(in_df)[1]
 
 	def is_valid(self, df):
 		'''
 		Checks if input dataframe's columns are in the right format
 		mode -- read or write 
 		'''
-		if df.shape[0] < 10 or df.shape[0] > 2000:
-			return False
+		if df.shape[0] < 10:
+			return False, "Слишком мало данных (меньше 10 строк)"
+		if df.shape[0] > 2000:
+			return False, "Слишком много данных (более 2000 строк)"
+
+		if "id" not in df.columns:
+			return False, "Нет столбца id"
+
+		if df["id"].shape[0] != df['id'].unique().shape[0]:
+			return False, "Не все id уникальные"
+
 		coords_nums = [int(col_name[1:]) for col_name in df.columns if col_name not in self.nameignore]
 		if len(coords_nums) > 50:
-			return False
+			return False, "Слишком много параметров X (больше 50)"
 		#Add information ('F', Cluster_Id, Subcluster)
 		is_asc = coords_nums == sorted(coords_nums)
 		if is_asc == False:
-			print('Wrong column name format')
-			return False
+			return False, "Ошибка данных"
 		types = df.dtypes
 		for i, col_name in enumerate(df.columns):
 			# print(col_name[0])
 			if i == 0 and col_name != 'id':
-				print('Wrong column name format')
-				return False
-			assert types[col_name] in self.types, "Bad type of column "
-		return True
+				return False, 'Id должно быть первым столбцом'
+			if types[col_name] not in self.types:
+				return False, "Не верный формат столбцов (проверьте на присутствие символов)"
+		return True, "Данные корректны"
 
 	def write(self, out_df, file_path):
 		print(file_path)

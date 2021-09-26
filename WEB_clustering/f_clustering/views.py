@@ -80,6 +80,11 @@ class SpeechProjectsCreate(CreateView): # новый
 	template_name = 'projects_add.html'
 	success_url = reverse_lazy('projects')
 	def form_valid(self, form):
+		
+		if Projects.objects.filter(name= form.cleaned_data["name"], author = self.request.user).count() > 0:
+			messages.error(self.request, "Проект с данным названием уже присутствует")
+			return super().form_valid(form)
+
 		self.object = form.save(commit=False)
 		self.object.author = self.request.user
 
@@ -89,16 +94,11 @@ class SpeechProjectsCreate(CreateView): # новый
 		self.object.stage = 1
 		self.object.save()
 
-		df = reader.read('./df/'+self.object.attach.url)
+		df, text = reader.read('./df/'+self.object.attach.url)
 		if df is not None:
 			self.object.status = True
-			# if 'cluster_id' in df.columns:
-			#   del df['cluster_id']
-			# if 'subcluster_id' in df.columns:
-			#   del df['subcluster_id']
-			# reader.write(df, './df/'+self.object.attach.url)
 		else:
-			messages.error(self.request, 'Ошибка формата данных!!!')
+			messages.error(self.request, text)
 
 		return super().form_valid(form)
 
