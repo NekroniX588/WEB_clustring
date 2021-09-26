@@ -64,17 +64,23 @@ class IMerger():
 					min_F = s[-1]
 			return min_F
 
-	def __merge(self, M, num_clusters, df):
+	def __merge(self, M, num_clusters, df, logging_save = False):
 	
 		min_item = M.argmin()
-		row = min_item//num_clusters
-		col = min_item%num_clusters
+		row = min_item // num_clusters
+		col = min_item % num_clusters
 		M[row,col]=np.inf
 		df.loc[df['cluster_id']==col, 'cluster_id'] = row
+		if logging_save:
+			write_log("До мерджинга")
+			write_log(str(M))
 		for i in range(num_clusters):
 			if M[row,i]>M[col,i]:
 				M[row,i] = M[col,i]
 			M[col,i] = np.inf
+		if logging_save:
+			write_log("После мерджинга")
+			write_log(str(M))
 
 	def mergeClusters(self, df, logging_save = False):
 		if logging_save:
@@ -113,6 +119,11 @@ class IMerger():
 			a_dist.sort(key=lambda i: float(i[1]), reverse=False)
 			dist_arr.append(a_dist[0])
 
+		if logging_save:
+			write_log("Оставляем только межкластерные связи")
+			for print_item in dist_arr:
+				write_log(str(print_item))
+
 		good_dots = []
 		for b in dist_arr:
 			for c in dist_arr:
@@ -126,14 +137,21 @@ class IMerger():
 			f_max_clus_1 = df[df['cluster_id']==dot1['cluster_id'].values[0]]['F'].max()
 			f_max_clus_2 = df[df['cluster_id']==dot2['cluster_id'].values[0]]['F'].max()
 			data.append({'p1':dot1.values[0,:], 'F_max_cluster1':f_max_clus_1, 'p2':dot2.values[0,:], 'F_max_cluster2':f_max_clus_2})
+		
+		if logging_save:
+			write_log("Хорошие точки")
+			for print_item in data:
+				write_log(str(print_item))
 		i = 0
 		while i<len(data):
 			for j in range(len(data)):
-				if data[i]['p1'][0]== data[j]['p2'][0] and j!=i:
+				if data[i]['p1'][0] == data[j]['p2'][0] and j!=i:
 					data.pop(j)
 					break
 			i += 1
+
 		if logging_save:
+			write_log("Очищенные хорошие точки")
 			for print_item in data:
 				write_log(str(print_item))
 
@@ -155,10 +173,11 @@ class IMerger():
 				F_matrix[x, y] = delta
 
 		if logging_save:
+			write_log("Сформированная матрица F")
 			write_log(str(F_matrix))
 
 		while F_matrix.min()<self.config['isolated_cluster']['merge_threshold']:
-			self.__merge(F_matrix, num_clusters, df)
+			self.__merge(F_matrix, num_clusters, df, logging_save = logging_save)
 
 		indexes = sorted(list(set(df['cluster_id'].values)))
 		index_map = {index:k for k,index in enumerate(indexes)}
