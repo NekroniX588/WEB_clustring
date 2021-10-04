@@ -64,24 +64,6 @@ class IMerger():
 					min_F = s[-1]
 			return min_F
 
-	def __merge(self, M, num_clusters, df, logging_save = False):
-	
-		min_item = M.argmin()
-		row = min_item // num_clusters
-		col = min_item % num_clusters
-		M[row,col]=np.inf
-		df.loc[df['cluster_id']==col, 'cluster_id'] = row
-		if logging_save:
-			write_log("До мерджинга")
-			write_log(str(M))
-		for i in range(num_clusters):
-			if M[row,i]>M[col,i]:
-				M[row,i] = M[col,i]
-			M[col,i] = np.inf
-		if logging_save:
-			write_log("После мерджинга")
-			write_log(str(M))
-
 	def mergeClusters(self, df, logging_save = False):
 		if logging_save:
 			write_log('НАЧАЛО МЕРДЖИНГА ' + str(datetime.datetime.now()))
@@ -155,29 +137,43 @@ class IMerger():
 			for print_item in data:
 				write_log(str(print_item))
 
-		F = df.iloc[:].values[:,:-1]
-		F_matrix = np.full((num_clusters,num_clusters), np.inf)
-		for i in range(len(data)):
-			if data[i]['F_max_cluster1']<=data[i]['F_max_cluster2']:
-				F_max = data[i]['F_max_cluster1']
-				x = int(data[i]['p2'][-1])
-				y = int(data[i]['p1'][-1])
-			else:
-				F_max = data[i]['F_max_cluster2']
-				x = int(data[i]['p1'][-1])
-				y = int(data[i]['p2'][-1])
-			delta = F_max - self.__get_profile(F, data[i]['p1'][:-1], data[i]['p2'][:-1], logging_save = logging_save)
-			if F_matrix[x, y] == np.inf:
-				F_matrix[x, y] = delta
-			elif F_matrix[x, y] > delta:
-				F_matrix[x, y] = delta
+		while True:
+			F = df.iloc[:].values[:,:-1]
+			F_matrix = np.full((num_clusters,num_clusters), np.inf)
+			for i in range(len(data)):
+				if data[i]['F_max_cluster1'] <= data[i]['F_max_cluster2']:
+					F_max = data[i]['F_max_cluster1']
+					x = int(data[i]['p2'][-1])
+					y = int(data[i]['p1'][-1])
+				else:
+					F_max = data[i]['F_max_cluster2']
+					x = int(data[i]['p1'][-1])
+					y = int(data[i]['p2'][-1])
+				if x == y:
+					continue
+				delta = F_max - self.__get_profile(F, data[i]['p1'][:-1], data[i]['p2'][:-1], logging_save = logging_save)
+				if F_matrix[x, y] == np.inf:
+					F_matrix[x, y] = delta
+				elif F_matrix[x, y] > delta:
+					F_matrix[x, y] = delta
 
-		if logging_save:
-			write_log("Сформированная матрица F")
-			write_log(str(F_matrix))
-
-		while F_matrix.min()<self.config['isolated_cluster']['merge_threshold']:
-			self.__merge(F_matrix, num_clusters, df, logging_save = logging_save)
+			print(F_matrix)
+	
+			min_item = F_matrix.argmin()
+			row = min_item // num_clusters
+			col = min_item % num_clusters
+			print(F_matrix[row,col])
+			if F_matrix[row,col] > self.config['isolated_cluster']['merge_threshold']:
+				break
+			F_matrix[row,col]=np.inf
+			df.loc[df['cluster_id']==col, 'cluster_id'] = row
+			for point_item in data:
+				if point_item['p1'][-1] == col:
+					point_item['p1'][-1] = row
+					point_item['F_max_cluster1'] = df[df['cluster_id']==row]['F'].max()
+				if point_item['p2'][-1] == col:
+					point_item['p2'][-1] = row
+					point_item['F_max_cluster2'] = df[df['cluster_id']==row]['F'].max()
 
 		indexes = sorted(list(set(df['cluster_id'].values)))
 		index_map = {index:k for k,index in enumerate(indexes)}
