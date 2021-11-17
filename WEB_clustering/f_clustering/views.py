@@ -93,8 +93,10 @@ class SpeechProjectsCreate(CreateView): # новый
 
 		self.object.stage = 1
 		self.object.save()
-
-		df, text = reader.read('./df/'+self.object.attach.url, first_open = True)
+		try:
+			df, text = reader.read('./df/'+self.object.attach.url, first_open = True)
+		except:
+			messages.error(self.request, "Ошибка чтения")
 		if df is not None:
 			self.object.status = True
 		else:
@@ -395,11 +397,13 @@ def calculate_norms(request, pk):
 	data = Projects.objects.get(pk=pk)
 	df = reader.read('./df/'+data.attach.url)
 	const = Const('./settings/'+data.settings.url)
-	const.norm(df)
+	df, text = const.norm(df)
 	const.save_consts('./settings/'+data.settings.url)
 	reader.write(df, './df/'+data.attach.url)
 
+	data.comments += text
 	data.comments += "Нормы подсчитаны\n"
+
 	data.save()
 
 	return redirect(reverse('const_start', args=(pk, )))
@@ -435,7 +439,7 @@ def calculate_pca_norms(request, pk):
 
 		df = reader.read('./df/'+data.attach.url)
 		const = Const('./settings/'+data.settings.url)
-		df, pca = const.pca_norm(df, coords)
+		df, pca, text = const.pca_norm(df, coords)
 
 		content = pickle.dumps(pca)
 		fid = ContentFile(content)
@@ -443,6 +447,7 @@ def calculate_pca_norms(request, pk):
 		fid.close()
 		const.save_consts('./settings/'+data.settings.url)
 		reader.write(df, './df/'+data.attach.url)
+		data.comments += text
 
 	data.comments += "Нормы подсчитаны\n"
 	data.save()

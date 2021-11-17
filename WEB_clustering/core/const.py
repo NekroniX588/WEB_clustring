@@ -35,6 +35,7 @@ class Const(object):
 
 	def __normalize(self, X, percent):
 		#add dict of means
+		text = ""
 		norms = []
 		for i in range(X.shape[1]):
 			x = X[:, i]
@@ -44,17 +45,18 @@ class Const(object):
 			start = 0
 			finish = lenght
 			time_d = d[start:lenght]
-			print('Persent of zeros start:',len(time_d[time_d==0])/len(time_d),'for X', i)
 			while finish<=len(d)-1 and len(time_d[time_d==0])/len(time_d) > self.config['consts']['percent_of_zeros']/100:
 				start += 1
 				finish += 1
 				time_d = d[start:finish]
-			print('Persent of zeros finish:',len(time_d[time_d==0])/len(time_d),'for X', i)
 			norm = d[start:finish].mean()
+			if norm == 0:
+				norm += 1e-9
+				text += "Норма координаты X{} равна 0 (Проверьте данные)\n".format(i+1)
 			x = x / norm
 			norms.append(norm)
 			X[:, i] = x
-		return X, norms
+		return X, norms, text
 
 	def norm(self, df):
 		'''
@@ -62,29 +64,34 @@ class Const(object):
 		args:
 		df -- data frame ['id', 'X1', 'X2', ..., 'Xn']
 		'''
+		text = ""
 		self.config['norms'] = {}
 		if 'ignore_coord' in self.config:
 			need_names = [n for n in df.columns if n not in self.nameignore + ['id']] + self.config['ignore_coord']
 		else:
 			need_names = [n for n in df.columns if n not in self.nameignore + ['id']]
 		df_for_norm = df[need_names]
-		X, norms = self.__normalize(df_for_norm.values, self.config['consts']['percent_for_norms'])
+		X, norms, message = self.__normalize(df_for_norm.values, self.config['consts']['percent_for_norms'])
+		text += message
 		# print(X[:10])
 
 		for i, col in enumerate(df_for_norm.columns[:]):
 			self.config['norms'][col] = float(np.round(norms[i], self.config['consts']['round_const']))
-		print(self.config)
+
 		df[need_names] = X
 		# print(df)
+		return df, text
 
 	def pca_norm(self, df, coords):
+		text = ""
 		self.config['norms'] = {}
 		if 'ignore_coord' in self.config:
 			need_names = [n for n in df.columns if n not in self.nameignore + ['id']] + self.config['ignore_coord']
 		else:
 			need_names = [n for n in df.columns if n not in self.nameignore + ['id']]
 		df_for_norm = df[need_names]
-		X, norms = self.__normalize(df_for_norm.values, self.config['consts']['percent_for_norms'])
+		X, norms, message = self.__normalize(df_for_norm.values, self.config['consts']['percent_for_norms'])
+		text += message
 		# print(X[:10])
 
 		need_for_pca = []
@@ -104,14 +111,16 @@ class Const(object):
 
 		Y = pca.transform(X[:,need_for_pca])
 
-		Y, after_pca_norms = self.__normalize(Y, self.config['consts']['percent_for_norms'])
+		text += "Для координат после PCA\n"
+		Y, after_pca_norms, message = self.__normalize(Y, self.config['consts']['percent_for_norms'])
+		text += message
 
 		for i in range(len(pca_names)):
 			self.config['norms'][pca_names[i]] = float(np.round(after_pca_norms[i], self.config['consts']['round_const']))
 
 		X[:,need_for_pca] = Y
 		df[need_names] = X
-		return df, pca
+		return df, pca, text
 
 	def get_norms(self):
 		if len(self.config['norms'])==0:
@@ -460,7 +469,7 @@ class Const(object):
 			landscape[start_step] = current_summ
 			total_steps += 1
 			if total_steps == self.config['consts']['max_depth']:
-				return True, total_steps
+				return True, total_steps, "Достигнут предел\n"
 
 		up_ = []
 		for i in range(1,self.config['consts']['up_steps']+1):
@@ -471,7 +480,7 @@ class Const(object):
 				landscape[up_step] = up_summ
 				total_steps += 1
 				if total_steps == self.config['consts']['max_depth']:
-					return True, total_steps
+					return True, total_steps, "Достигнут предел\n"
 
 		down_ = []
 		for i in range(1,self.config['consts']['down_steps']+1):
@@ -482,9 +491,9 @@ class Const(object):
 				landscape[down_step] = down_summ
 				total_steps += 1
 				if total_steps == self.config['consts']['max_depth']:
-					return True, total_steps
+					return True, total_steps, "Достигнут предел\n"
 
-		return False, total_steps
+		return False, total_steps, ""
 
 	def __calculate_weights_by_integral_Y_direct(self, X_percent_matrix, X, started_a, logging_save = False):
 
@@ -524,7 +533,7 @@ class Const(object):
 
 		landscape = {}
 
-		status, total_steps = self.__calculate_window(X_percent_matrix, arr_Y_step, X, started_a, landscape, 0, total_steps)
+		status, total_steps, text = self.__calculate_window(X_percent_matrix, arr_Y_step, X, started_a, landscape, 0, total_steps)
 
 		max_now = find_max(landscape)
 		values_old = None
@@ -535,10 +544,10 @@ class Const(object):
 				break
 			values_old = values
 			if len(values) > 1:
-				status, total_steps = self.__calculate_window(X_percent_matrix, arr_Y_step, X, started_a, landscape, max(values), total_steps)
-				status, total_steps = self.__calculate_window(X_percent_matrix, arr_Y_step, X, started_a, landscape, min(values), total_steps)
+				status, total_steps, text = self.__calculate_window(X_percent_matrix, arr_Y_step, X, started_a, landscape, max(values), total_steps)
+				status, total_steps, text = self.__calculate_window(X_percent_matrix, arr_Y_step, X, started_a, landscape, min(values), total_steps)
 			else:
-				status, total_steps = self.__calculate_window(X_percent_matrix, arr_Y_step, X, started_a, landscape, max_now, total_steps)
+				status, total_steps, text = self.__calculate_window(X_percent_matrix, arr_Y_step, X, started_a, landscape, max_now, total_steps)
 				if find_max(landscape) == max_now:
 					break
 				else:
@@ -556,7 +565,7 @@ class Const(object):
 			write_log("Финальная а = {}".format(started_a * (self.config['consts']['power_koef']**max_now)))
 
 
-		return started_a * (self.config['consts']['power_koef']**max_now), landscape
+		return started_a * (self.config['consts']['power_koef']**max_now), landscape, text
 
 	def get_profile(self, F, p1, p2, logging_save = False):
 		#Функция рассчета профиля F - матрица формата ['id','x1',...,'xn','F'], p1, p2 - точки формата ['id','x1',...,'xn','F']
@@ -740,27 +749,21 @@ class Const(object):
 		#[1, 2, 1.3]
 		#[1, 3, 1.8] - пример
 		#[2, 3, 5.2]
-		print(len(matrix))
+		text = ""
 		matrix.sort(key=lambda x: x[2])
 		distance_matrix = np.array(matrix) #Переводим матрицу в np.array
-		print('distance_matrix',distance_matrix.shape)
 		#Выбираем X% матрицы расстояний
 		lenght = max(int(np.round(distance_matrix.shape[0]*(self.config['consts']['percent_X']/100), 0)), 1)
 		start = 0
 		finish = lenght
 		time_d = distance_matrix[start:finish]
-		print('Persent of zeros start:',len(time_d[time_d[:,2]==0])/len(time_d))
 		while finish<=len(distance_matrix)-1 and len(time_d[time_d[:,2]==0])/len(time_d) > self.config['consts']['percent_of_zeros']/100:
-			print('Persent of zeros new:',len(time_d[time_d[:,2]==0])/len(time_d))
 			start += 1
 			finish += 1
 			time_d = distance_matrix[start:finish]
 		X_percent_matrix = distance_matrix[start:finish]
-		print('X_percent_matrix',X_percent_matrix.shape)
 		#Вычисляем начальное значение a
-		print(X_percent_matrix)
 		mean_distance_matrix = X_percent_matrix[:,2].mean()
-		print(mean_distance_matrix)
 		started_a = self.config['consts']['const'] * mean_distance_matrix
 		if type == 0:
 			max_a = started_a
@@ -775,7 +778,8 @@ class Const(object):
 		elif type == 3:#В третьем варианте высчитываем расстояния по 3-му варианту в документе
 			max_a, landscape = self.__calculate_weights_by_integral_Y(X_percent_matrix, X, started_a)
 		elif type == 4:#В третьем варианте высчитываем расстояния по 3-му варианту в документе
-			max_a, landscape = self.__calculate_weights_by_integral_Y_direct(X_percent_matrix, X, started_a, logging_save = logging_save)
+			max_a, landscape, message = self.__calculate_weights_by_integral_Y_direct(X_percent_matrix, X, started_a, logging_save = logging_save)
+			text += message
 		#На выходе получаем 2 значения (коэффициент a, и среднее значение весов)
 		# if logging_save:
 		#   X = []
@@ -792,7 +796,7 @@ class Const(object):
 		#   plt.xlabel('Step')
 		#   plt.savefig('landscape.png', format='png')
 		#   plt.clf()
-		return max_a
+		return max_a, text
 
 	def calculate_a(self, df, type_of_optimization=2, max_a=None, logging_save = False):
 		'''
@@ -822,7 +826,8 @@ class Const(object):
 
 			need_names = [n for n in df.columns if n not in self.nameignore]
 			X = df[need_names].values#приводим их np.array [id, X1, X2]
-			max_a = self.__calculate_const(X, type_of_optimization, cluster_id, subcluster_id, logging_save = logging_save)
+			max_a, message = self.__calculate_const(X, type_of_optimization, cluster_id, subcluster_id, logging_save = logging_save)
+			text += message
 		else:
 			text += 'Calculation consts with started a\n'
 		#Изменяем необходимые константы
