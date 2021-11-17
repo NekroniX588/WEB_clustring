@@ -3,28 +3,28 @@
   {% block content %}
   <ul class="nav nav-pills justify-content-center">
     <li class="nav-item">
-      {% url 'block' 1 as block1 %}
-      <a class="nav-link {% if block1 == request.path %} active {% endif %}" href="{% url 'block' 1 %}">Блок 1</a>
+      {% url 'block_ru' 1 as block_ru1 %}
+      <a class="nav-link {% if block_ru1 == request.path %} active {% endif %}" href="{% url 'block_ru' 1 %}">Блок 1</a>
     </li>
     <li class="nav-item">
-      {% url 'block' 2 as block2 %}
-      <a class="nav-link {% if block2 == request.path %} active {% endif %}" href="{% url 'block' 2 %}">Блок 2</a>
+      {% url 'block_ru' 2 as block_ru2 %}
+      <a class="nav-link {% if block_ru2 == request.path %} active {% endif %}" href="{% url 'block_ru' 2 %}">Блок 2</a>
     </li>
     <li class="nav-item">
-      {% url 'block' 3 as block3 %}
-      <a class="nav-link {% if block3 == request.path %} active {% endif %}" href="{% url 'block' 3 %}">Блок 3</a>
+      {% url 'block_ru' 3 as block_ru3 %}
+      <a class="nav-link {% if block_ru3 == request.path %} active {% endif %}" href="{% url 'block_ru' 3 %}">Блок 3</a>
     </li>
     <li class="nav-item">
-      {% url 'block' 4 as block4 %}
-      <a class="nav-link {% if block4 == request.path %} active {% endif %}" href="{% url 'block' 4 %}">Блок 4</a>
+      {% url 'block_ru' 4 as block_ru4 %}
+      <a class="nav-link {% if block_ru4 == request.path %} active {% endif %}" href="{% url 'block_ru' 4 %}">Блок 4</a>
     </li>
     <li class="nav-item">
-      {% url 'block' 5 as block5 %}
-      <a class="nav-link {% if block5 == request.path %} active {% endif %}" href="{% url 'block' 5 %}">Блок 5</a>
+      {% url 'block_ru' 5 as block_ru5 %}
+      <a class="nav-link {% if block_ru5 == request.path %} active {% endif %}" href="{% url 'block_ru' 5 %}">Блок 5</a>
     </li>
     <li class="nav-item">
-      {% url 'block' 6 as block6 %}
-      <a class="nav-link {% if block6 == request.path %} active {% endif %}" href="{% url 'block' 6 %}">Блок 6</a>
+      {% url 'block_ru' 6 as block_ru6 %}
+      <a class="nav-link {% if block_ru6 == request.path %} active {% endif %}" href="{% url 'block_ru' 6 %}">Блок 6</a>
     </li>
 
   </ul>

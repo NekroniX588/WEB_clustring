@@ -14,8 +14,8 @@
       <h1>{{request.user.is_superuser}}</h1> -->
       <ul class="nav nav-pills justify-content-end">
         <li class="nav-item">
-          {% url 'block' 1 as url_block %}
-          <a class="nav-link {% if url_block == request.path %} active {% endif %}" href="{{url_block}}">Главная</a>
+          {% url main as url_main %}
+          <a class="nav-link {% if url_main == request.path %} active {% endif %}" href="{% url 'main' %}">Главная</a>
         </li>
 
         {% if request.user.is_authenticated %}

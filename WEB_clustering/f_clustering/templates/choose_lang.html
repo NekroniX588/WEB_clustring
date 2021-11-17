@@ -1,0 +1,9 @@
+{% extends 'main.html' %}
+
+	{% block content %}
+	<div class="container mt-4">
+	  <a type="button" class="btn btn-primary btn-lg btn-block" href="{% url 'block_ru' 1 %}">Русская версия</a>
+	  <a type="button" class="btn btn-secondary btn-lg btn-block" href="{% url 'block_en' 1 %}">English version</a>
+	</div>
+	  
+	{% endblock %}

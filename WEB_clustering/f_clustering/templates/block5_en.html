@@ -1,0 +1,47 @@
+{% extends 'block1_en.html' %}
+
+  {% block info %}
+    <div class="container mt-4">
+
+      {% load static %}
+
+      <h1>Block 5</h1>
+      <p>The next step is classification. The algorithm uses the clustering obtained at the previous step, for train data (which acquired the role of "trained data"), to calculate the classifying functions that estimate the probability of the data point belonging to one or another of the identified clusters/classes.</p>
+
+      <p>Firslty, we select the test file from the project where the train file is located, more precisely, the file containing the annotation for clusters (i.e., the column "cluster_id" or "subcluster id"). Secondly, we apply annotation to this file namely, to calculate values of the membership function for the points located in test (also, we can apply this procedure for train file as well). That is it, classification is done. Assigning a test file, we must select the coordinates from the subset of common coordinates for TRAIN and for TEST that participate in the classification, and again perform the procedure of constants setting.</p>
+
+      <p>FOR CONTROL OF ACTIONS RELATED TO ANALYSIS ALGORITHM, INCLUDING - SAVING INTERMEDIATE ANALYSIS RESULTS AT EACH ITS STAGE, IT IS RECOMMENDED TO FOLLOW INFORMATION RECORDS DISPLAYED IN THE LOG WINDOW (LOG). For this, it is recommended to refresh the page, since the result of some operations is displayed only after that.</p>
+
+      <p>For demonstration, using the example of the train file itself, the values of the mentioned functions are entered into the columns located handright to the already existing columns (id, coordinates, id of clusters) in each row. The number of functions (i.e. columns) is always equal to the number of clusters identified during the analysis.</p>
+
+      <p>Likewise, this set of functions can be calculated for any point specified in a system that has at least one common coordinate with the system in which the train data points are specified.</p>
+
+      <p>The main point of the solution implemented here is demonstrated by the following example: <a href="https://disk.yandex.ru/i/Tva7kGReSGLLJw">open a file with data for classification here</a> {'train data (X1-X5) .xlsx'}: we see train data described with five coordinates: X1, X2, X3, X4 , X5. For use in clustering, only the first two coordinates X1 and X2 are left.</p>
+
+      <p>The test data <a href="https://disk.yandex.ru/i/a4W5mmOh103R4A">link to the file </a> {'Test-data (X3,5,6,7) .xlsx'} are set in the X3, X5, X6, X7 system. Thus, it has only two common coordinates with train data (moreover, among them there is none of those used for clustering at all - the method does not impose such a limitation).</p>
+
+      <p>As a result of clustering and subclustering, we obtained subsets from the train data. We will show them on the X1 X2 projection (for this, we return to Fig. 4); to be presice, on the coordinates on which we were clustered; here the picture looks clear.</p>
+
+      <figure class="sign">
+       <img src="{% static "images/4.png" %}" alt="Рисунок 4 не нейден" height=320>
+       <figcaption>Figure 4</figcaption>
+      </figure>
+
+      <p>And now we will show the same train data on the X3X5 projection (Figure 7.1). So far without dividing into clusters. Looking at the picture we can suggest that the application of clustering methods to data will hardly give good result, since the data looks too "monolithic" and "amorphous".</p>
+
+      <figure class="sign">
+       <img src="{% static "images/7.1.png" %}" alt="Рисунок 7.1 не нейден" height=320>
+       <figcaption>Figure 7.1</figcaption>
+      </figure>
+
+      <p>Now, in the next illustration (Figure 7.2), we show the clustering results obtained on X1 and X2, but projected onto X3 X5. A glance at the picture leads to the conclusion (albeit speculative, since the purpose of the illustration is clarity) that, in contrast to clustering, the classification method (already belonging to the category of methods "supervised learning") has high chance of being effective.</p>
+
+      <figure class="sign">
+       <img src="{% static "images/7.2.png" %}" alt="Рисунок 7.2 не нейден" height=320>
+       <figcaption>Figure 7.2</figcaption>
+      </figure>
+
+      <p>The superviser here is the previously obtained annotation of train data as clusters on other coordinates. At each point, individual classifying functions are calculated. A set of such functions, according to the number of clusters found. By the value of each such function at a given point, we judge the probability of the correct assignment of a point to a cluster. It is clear that the values of these functions can be obtained both for points from train and for points from test (in general, for any point that can be described in subsystem X3X5).</p>
+
+    </div>
+  {% endblock %}

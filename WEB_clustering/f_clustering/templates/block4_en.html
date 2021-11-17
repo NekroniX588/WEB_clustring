@@ -1,0 +1,18 @@
+{% extends 'block1_en.html' %}
+
+  {% block info %}
+    <div class="container mt-4">
+      <h1>Block 4</h1>
+      <p>The next step is "Clustering"; it includes the clustering algorithm itself. It can be skipped to go directly to sub-clustering (i.e. to the convex clustering). Having performed clustering, we get the results, namely, the file that has length (the number of lines) of the train file, which has all the coordinate fields from the train file (it needs to remember that the coordinate values in the result file are and remain normalized).   Besides, the “Cluster ID” field is added to the right, which indicats the cluster assignment of each point from the train file.</p>
+
+      <p>The merging algorithm can be optionally executed after completion of the clustering procedure. It works with the resulting clusters and reduces their number by merging clusters where it can be done.</p>
+
+      <p>The sub-clustering algorithm for identifying convex subsets is also optional; it can be launched after clustering (or clustering + merging) or immediately clustering;</p>
+
+      <p>In the first case, the search for convex subsets is performed separately within the found clusters to reduces the amount of computation.</p>
+
+      <p>After performing sublustering, we get the results namely, a file with length (the number of lines) and ID composition of the train file, which has all the coordinate fields from the train file (in normalized values, where the norms were calculated). Besides, the "Cluster ID" field indicates the cluster membership of each point from the train file. If the clustering step was skipped, then the "Cluster ID" field will be missing. And finally, as a result, the “SubclusterID” field appears, filled with the identifiers of each point belonging to one or another subcluster (convex set). The results can be viewed directly from the Service page (clicking "View data" on the "Clustering" tab), or downloaded:</p>
+
+      <p>a) as a single file (click "Download data"); b) a set of files by the number of found clusters/sub-clusters (click "Download data by clusters/by sub-clusters")</p>
+    </div>
+  {% endblock %}

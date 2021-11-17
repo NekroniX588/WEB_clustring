@@ -1,0 +1,16 @@
+{% extends 'block1_en.html' %}
+
+  {% block info %}
+    <div class="container mt-4">
+      <h1>Block 3</h1>
+      <p>Within the step “Constants settings” performed according to one of two methods (“Basic”/“Optimized”), the calculation of the distance Matrix is performed based on the normalized distances of the coordinates selected for the analysis.</p>
+
+      <p>Let us set the "% of minimum edges" setting (in the range between 0 and 100 and "coefficient for a" in the range between 0.001 and 5.</p>
+
+      <p>The first setting is similar to the percentage setting for norms described above and determines the choice of the "core" of the most closely concentrated data points that are important in identifying clusters; the second setting option is associated with the main control parameter of the algorithm (parameter "a"), which corresponds to for its sensitivity: setting the value of this setting to a relatively large value, determines the tendency towards the less sensitive operation of the algorithm (identifying large clusters in the data and ignoring the small ones); in the opposite case, a relatively small value determines high sensitivity i.e. the tendency to identify smaller, distinct subsets in the data.</p>
+
+      <p>The next step of algorithm proceeds the data to find optimal constants.  Once we set the settings and launch the algorithm for the constants tuning, two methods are offered. The first ("basic") is more approximate and faster; the second ("optimized") is more intelligent and slower. After the execution algorithm, the main selected constant - "a" is returned to the user that can manually adjust this constant. The constants tuning can be reset (the "reset constants" button); in contrast, the norms and components are not changeable as mentioned earlier. After all manual changes in settings, we click the "Save" button. If you want the changes in the automatically selected constants, then you need to click "Reset constants" and start their selection again.</p>
+
+      <p>A complete list of constants is stored in a file with the ability to download and then reload for use on the same or new data.</p>
+    </div>
+  {% endblock %}

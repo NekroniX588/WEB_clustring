@@ -1,0 +1,75 @@
+{% extends 'main.html' %}
+
+  {% block content %}
+  <ul class="nav nav-pills justify-content-center">
+    <li class="nav-item">
+      {% url 'block_en' 1 as block_en1 %}
+      <a class="nav-link {% if block_en1 == request.path %} active {% endif %}" href="{% url 'block_en' 1 %}">Блок 1</a>
+    </li>
+    <li class="nav-item">
+      {% url 'block_en' 2 as block_en2 %}
+      <a class="nav-link {% if block_en2 == request.path %} active {% endif %}" href="{% url 'block_en' 2 %}">Блок 2</a>
+    </li>
+    <li class="nav-item">
+      {% url 'block_en' 3 as block_en3 %}
+      <a class="nav-link {% if block_en3 == request.path %} active {% endif %}" href="{% url 'block_en' 3 %}">Блок 3</a>
+    </li>
+    <li class="nav-item">
+      {% url 'block_en' 4 as block_en4 %}
+      <a class="nav-link {% if block_en4 == request.path %} active {% endif %}" href="{% url 'block_en' 4 %}">Блок 4</a>
+    </li>
+    <li class="nav-item">
+      {% url 'block_en' 5 as block_en5 %}
+      <a class="nav-link {% if block_en5 == request.path %} active {% endif %}" href="{% url 'block_en' 5 %}">Блок 5</a>
+    </li>
+    <li class="nav-item">
+      {% url 'block_en' 6 as block_en6 %}
+      <a class="nav-link {% if block_en6 == request.path %} active {% endif %}" href="{% url 'block_en' 6 %}">Блок 6</a>
+    </li>
+
+  </ul>
+  {% load static %}
+
+  {% block info %}
+    <div class="container mt-4">
+      <h1>Block 1</h1>
+      <p>This web service is an implementation of sequential analysis of quantitative data defined in a finite feature space, which includes a preliminary step (intelligent setting of parameters) and THREE main steps:</p>
+      <ul>
+        <li>
+          <p>clustering  (fig. 1, 2, 3)</p>
+          <figure class="sign">
+           <img src="{% static "images/1.png" %}" alt="Рисунок 1 не нейден" height=220>
+           <figcaption>Figure 1</figcaption>
+          </figure>
+          <figure class="sign">
+           <img src="{% static "images/2.png" %}" alt="Рисунок 2 не нейден" height=220>
+           <figcaption>Figure 2</figcaption>
+          </figure>
+          <figure class="sign">
+           <img src="{% static "images/3.png" %}" alt="Рисунко 3 не нейден" height=220>
+           <figcaption>Figure 3</figcaption>
+          </figure>
+        </li>
+
+        <li>
+          <p>convex sets extraction (Fig. 4)</p>
+          <figure class="sign">
+           <img src="{% static "images/4.png" %}" alt="Рисунок 4 не нейден" height=320>
+           <figcaption>Figure 4</figcaption>
+          </figure>
+        </li>
+        <li>
+          <p>classification (Fig. 5), which uses the results of any of the two previous steps, by obtaining in the selected coordinate system "membership functions" of a data point (object/vector is the same here) from a test sample to a particular subset ("class") found on a trained sample.</p>
+          <figure class="sign">
+           <img src="{% static "images/5.png" %}" alt="Рисунок 5 не нейден" height=320>
+           <figcaption>Figure 5</figcaption>
+          </figure>
+        </li>
+      </ul>
+      <p>
+        The illustration of the one-dimensional case shows how based on the train sample, which was assigned each - to one of the two clusters "A" or "B", two membership functions are defined, the value of which depends on the density of concentration of objects from the corresponding cluster. After getting values of classificators on a test sample, we can measure the reliability of assigning points to the classes, which were created based on clusters.
+      </p>
+    </div>
+  {% endblock %}
+
+  {% endblock %}

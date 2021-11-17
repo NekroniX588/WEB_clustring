@@ -1,0 +1,70 @@
+{% extends 'block1_en.html' %}
+
+  {% block info %}
+    <div class="container mt-4">
+
+      {% load static %}
+
+      <h1>Block 2</h1>
+      <p>1. Let's see the functions of this web service.</p>
+
+      <p>1.1. Input data format: * .csv or * .xls (x) file containing columns: necessary field "id" with unique integer values; and an arbitrary number of fields for numeric coordinates (the name of each such field is X1, X2, X3, etc .; decimal separator: "." or ","), which describe the analyzed data. An example input file can be obtained here.</a></p>
+
+      <p>Thus, if the task is to process a dataset that includes non-quantitative data (gender, color, "yes/no", etc.), or quantitative per se, but specified in a format other than numeric (date/time, etc. .), then along with other requirements for the input format, such data must be presented in numerical form.</p>
+
+      <p>The input file is pre-checked:</p>
+      <ul>
+        <li>The size of the input file must not exceed 4 MB</li>
+        <li>The number of data lines must be between 10 and 2000</li>
+        <li>The number of coordinate fields is between 1 and 50</li>
+        <li>The presence of the id field and the uniqueness of the values in it</li>
+        <li>The id field comes first</li>
+        <li><b>Columns do not contain non-numeric characters</b></li>
+      </ul>
+      <hr/>
+      <p>The data is processed by the service as a train sample and as a test sample.</p>
+      <p>TRAIN is the data in a separate file (part of the data in the common source file) to which the clustering / convex set/classification procedures are applied;</p>
+
+      <p>TEST is also data in a separate file (part of data in a common source file) to which the classification procedure is applied. In other words, we assign a point to a predefined set (class) by a unary or multiple principle.</p>
+
+      <p>Formats of files for train and test data are the same.</p>
+
+      <p>The definition of classes occurs as a result of executing on TRAIN the algorithms for clustering / identifying convex sets implemented in the service and obtaining an annotated train-sample as a result. This annotation can be implemented in any way; it can be done manually by the user himself, or a third-party algorithm, as long as all the requirements for the loaded train file are met.</p>
+
+      <p>We can get TRAIN and TEST in two ways: direct loading of two files when creating a project; - loading a single file, followed by applying the "% -sample" option; a value is entered in the range from 0 to 100, according to which a specified percentage of data points are randomly sampled, which belongs to the train-sample. Accordingly, the rest of the objects are automatically recorded in a test sample, to which only classification can be applied using the results obtained from the analysis of the train sample.</p>
+
+      <p>An important note about the requirements for matching the datasets TRAIN and TEST: as already mentioned, both of them have a necessary field of unique integer id and a non-zero finite set of coordinate fields. In addition, TRAIN and TEST must have at least one common coordinate field; in other words, at least one of the X headers in the TEST data must also be contained in the TRAIN data.</p>
+
+      <p>The fact that the TRAIN and TEST data do not have to be described in the same coordinate system, but can be described in different systems, from which only a minimal intersection of the sets of measurements is necessary and sufficient, is an important circumstance due to which the possibilities of the analytical instruments are expanding significantly. The essence of this will be clear from further comments.</p>
+
+      <p>1.2. Let us continue the explanation of the rest of the settings that are required to start working with the service. Using the projects menu, opened by clicking the corresponding button, we create a project, load the data into the project as a single file (it will be processed as train or as test at the loading step, it does not matter since the format is the same). After that, it is possible to view this data.</p>
+
+     <!--  <p>С помощью меню «Проекты», открываемого нажатием соответствующей кнопки, создаем проект, данные в проект загружаем в виде единственного файла (будет он обрабатываться как train или как test на этапе загрузки не имеет значения – формат одинаков), и имеется возможность просмотра этих данных.</p> -->
+
+      <figure class="sign">
+       <img src="{% static "images/6.png" %}" alt="Рисунок 6 не нейден" height=320>
+       <figcaption>Figure 6</figcaption>
+      </figure>
+
+      <p>In addition, on the "Start page" tab, the option for determining the number of intervals becomes available (this will be needed to display some statistics), and the option for separating the train sample percentage (by default it is 100%)</p>
+
+      <p>The sequential transition between steps is performed by pressing the "Next" button (at the bottom of the screen, under the log window). </p>
+      <img src="{% static "images/next.png" %}" alt="Рисунок next не нейден" height=50>
+
+      <p>The arbitrary transition between steps can be done by moving through the corresponding tabs provided that the specific transition (or return) to the step is algorithmically admissible, taking into account the current completed step.</p>
+      <img src="{% static "images/menu.png" %}" alt="Рисунок menu не нейден" height=50>
+      <!-- <p>при условии, что  конкретный переход (или возврат) к этапу  алгоритмически допустим, с учетом текущего выполненного этапа.</p> -->
+
+      <p>When switching to the "Constants setting" step (which implements the preliminary step of analysis), the user sees a list of coordinates of the loaded data.</p>
+
+      <p>First, the user needs to calculate the norms (in the options "Calculate norms" and "Calculate norms + PCA"; the difference between them will be said below). After pressing the corresponding button, the norms for each coordinate of the input data are calculated and displayed, the coordinate values are distinguished by their norms (or, divided by norms + are transformed in accordance with the PCA results) and take place in the analysis in a normalized form.</p>
+
+      <p>Upon completion of this action, it becomes possible to selectively exclude individual coordinates from further analysis (consisting in performing clustering algorithms - simple and/or convex), as well as a menu appears for constants setting; in particular, choosing a method for setting ("Basic" /"Optimized"). Right after completion of the necessary step of constants setting, the button "Next" becomes available to the user, leading to the clustering step itself.</p>
+
+      <p>Let us have a look at the details of the normalization and PCA procedures. By clicking the button "Calculate Norms + PCA", a procedure that implements the Principal Component Analysis (PCA) is applied to the data (optional) in order to eliminate the linear relationship existing between the initial coordinates. As part of the preliminary setup, it is possible to exclude some of the coordinates from processing; to be precise, we can selectively exclude coordinates from the PCA transformation, but normalization will still be applied to all coordinates. Once the PCA is done, the coordinates are replaced by their linear combinations, in an amount equal to the number of original coordinates. When displaying the values of norms, "_original" will be added to the names of coordinates that are not included in the PCA. Сoefficients are saved, and we can return to the original coordinates at the end of the analysis.</p>
+
+      <p>Before normalization and PCA (or only one standardization; the choice of one of these two options is a required action), we set the value of the minimum distance settings (or, press “determine automatically") and max allowed percentage of zero distances. Finally, we click "Calculate norms". As a result, the values of all coordinates of the data array (and not only those selected by the user for analysis) will be transformed into a normalized form. Attention: the norms (and components) are calculated within the Project only once and they cannot be reset and recalculated; whereas parameters are changeable and its setting goes further. Moreover, they can be adjusted manually and saved by clicking the button "Save".</p>
+
+      <p>Normalization in this algorithm is performed by dividing all the initial values along the coordinate, by the mean of the specified percentage of minimum distances taken from the matrix of Euclidian distances, calculated for each coordinate separately. To find the percentage of minimum, we apply a sorting, the purpose of which is to determine the "core" of the most closely located (for a given dimension) data points and to exclude the influence of outliers - that is, a highly dispersed part of the sample. The second setting option adjusts the allowed percentage of zero distances (which may occur in the data and make a big part of it) into the base for calculating the norm, in order to avoid the occurrence of zero values of the norms, which will make further correct work impossible.</p>
+    </div>
+  {% endblock %}

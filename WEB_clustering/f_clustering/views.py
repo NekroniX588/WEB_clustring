@@ -37,11 +37,19 @@ LOGGING = False
 reader = Reader()
 
 def main(request):
-	return redirect(reverse('block', args=(1, )))
+	print("Main")
+	template = 'choose_lang.html'
+	# print(template)
+	return render(request, template, {})
 
-def block(request, pk):
-	template = 'block' + str(pk) + '.html'
-	print(template)
+def block_ru(request, pk):
+	template = 'block' + str(pk) + '_ru.html'
+	# print(template)
+	return render(request, template, {})
+
+def block_en(request, pk):
+	template = 'block' + str(pk) + '_en.html'
+	# print(template)
 	return render(request, template, {})
 
 class SpeechLoginView(LoginView):

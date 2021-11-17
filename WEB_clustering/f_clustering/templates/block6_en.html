@@ -1,0 +1,34 @@
+{% extends 'block1_en.html' %}
+
+  {% block info %}
+    <div class="container mt-4">
+
+      <h1>Block 6</h1>
+      <p>As already mentioned, clustering/sub-clustering results can be saved automatically, with a choice of:</p>
+      <p>A) in a shared file - the set of points will be identical to the set in the input file;</p>
+      <p>B) in the form of separate files (one file = one subset) to simplify the launch of a further analysis. In other words, we load the resulting file with the points of any selected subset, as an input file, for further clustering, already separately inside any previously selected subset of the data.</p>
+      <p>The classification results can also be saved as a file (with the values of the classifying functions calculated for each data point in each found cluster);</p>
+
+      <p>Note: the values of the data downloaded at any step, after the stage of selecting constants, are displayed and saved to the result files in the normalized form.</p>
+      <hr/>
+      <p>This web service provides access to a demo, simplified version of the complex of methods of multivariate statistical data analysis developed by us.</p>
+
+      <p>If you have any questions, please contact a specially open topic on the forum. Also, you can contact me personally by E-mail: <b>abc@yandex.ru</b>.</p>
+
+      <p>Suggestions and applications for the analysis of user data of the format and size that go beyond the restrictions set in the web service, please also send request to E-mail: <b>abc@yandex.ru</b></p>
+
+      <p>The conditions for completing personal tasks are discussed individually and depend on:</p>
+      <ul>
+      	<li>
+      		deadling;
+      	</li>
+      	<li>
+      		the need for preprocessing of input data and the complexity of such work;
+      	</li>
+      	<li>
+      		the size of the input data, which determines the amount of computing power reserved for processing).
+      	</li>
+      </ul>
+
+    </div>
+  {% endblock %}
