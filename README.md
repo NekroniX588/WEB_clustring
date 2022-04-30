@@ -1,2 +1,9 @@
 # WEB_clustring
-F_clustering web app
+
+Веб сервис для работы с алгоритмом кластериазции, основанном на вычислении плотности точек.
+
+# Запуск 
+
+<pre><code>python manage.py runserver
+</code></pre>
+
